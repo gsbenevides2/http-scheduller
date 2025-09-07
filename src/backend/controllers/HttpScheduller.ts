@@ -1,4 +1,4 @@
-import { Elysia, t } from "elysia";
+import { Elysia, StatusMap, t } from "elysia";
 import {
 	type HttpScheduller,
 	HttpSchedullerService,
@@ -30,6 +30,7 @@ const httpSchedullerSchema = t.Object({
 		description: "The URL of the http scheduller",
 		example: "https://www.google.com",
 	}),
+
 	method: t.Union(
 		[
 			t.Literal("GET"),
@@ -104,45 +105,41 @@ const HttpSchedullerController = new Elysia({
 	.post(
 		"/",
 		async ({ body, status }) => {
-			await HttpSchedullerService.createOrUpdateMany(body.schedullers);
-			return status(200, undefined);
+			await HttpSchedullerService.createOrUpdateMany(body);
+			return status(StatusMap["No Content"], undefined);
 		},
 		{
 			detail: {
 				summary: "Create or update many http scheduller",
 				description: "Create or update http scheduller",
 			},
-			body: t.Object({
-				schedullers: t.Array(httpSchedullerSchema, {
-					title: "Http Scheduller",
-					description: "The http scheduller",
-					example: [exemple],
-				}),
+			body: t.Array(httpSchedullerSchema, {
+				title: "Http Scheduller",
+				description: "The http scheduller",
+				example: [exemple],
 			}),
 			response: {
-				200: t.Undefined(),
+				[StatusMap["No Content"]]: t.Undefined(),
 			},
 		},
 	)
 	.delete(
 		"/",
 		async ({ body, status }) => {
-			await HttpSchedullerService.deleteMany(body.ids);
-			return status(200, undefined);
+			await HttpSchedullerService.deleteMany(body);
+			return status(StatusMap["No Content"], undefined);
 		},
 		{
 			detail: {
 				summary: "Delete many http scheduller",
 				description: "Delete http scheduller",
 			},
-			body: t.Object({
-				ids: t.Array(t.String(), {
-					title: "Ids of the http scheduller",
-					description: "The ids of the http scheduller",
-				}),
+			body: t.Array(t.String(), {
+				title: "Ids of the http scheduller",
+				description: "The ids of the http scheduller",
 			}),
 			response: {
-				200: t.Undefined(),
+				[StatusMap["No Content"]]: t.Undefined(),
 			},
 		},
 	);
