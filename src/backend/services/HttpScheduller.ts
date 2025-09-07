@@ -37,6 +37,9 @@ export class HttpSchedullerService {
 				$in: ids,
 			},
 		});
+		for (const id of ids) {
+			await CronnerService.removeJob(id);
+		}
 	}
 	static async getAll() {
 		const httpScheduller = await collection.find({}).toArray();
