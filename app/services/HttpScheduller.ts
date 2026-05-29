@@ -1,4 +1,4 @@
-import { MongoClient, type ObjectId } from "mongodb";
+import { Collection, MongoClient, type ObjectId } from "mongodb";
 import { CronnerService } from "./Cronner";
 import { getEnv } from "../utils/getEnv";
 
@@ -17,21 +17,36 @@ type WithIdHttpScheduller = HttpScheduller & {
   _id: ObjectId;
 };
 
-const mongoClient = await MongoClient.connect(getEnv("MONGO_URI", false), {
-  authSource: "http-scheduller",
-});
-
-const db = mongoClient.db("http-scheduller");
-
-const collection = db.collection<WithIdHttpScheduller>("http-scheduller");
-
 function removeInternalId(httpScheduller: WithIdHttpScheduller) {
   const { _id, ...rest } = httpScheduller;
   return rest;
 }
 
 export class HttpSchedullerService {
+  static mongoClient: MongoClient | null = null;
+  static db: ReturnType<MongoClient["db"]> | null = null;
+  static collection: Collection<WithIdHttpScheduller>;
+  static async getCoolection() {
+    if (!this.mongoClient || !this.db) {
+      const mongoClient = await MongoClient.connect(
+        getEnv("MONGO_URI", false),
+        {
+          authSource: "http-scheduller",
+        },
+      );
+
+      const db = mongoClient.db("http-scheduller");
+      const collection = db.collection<WithIdHttpScheduller>("http-scheduller");
+      this.mongoClient = mongoClient;
+      this.db = db;
+      this.collection = collection;
+      return collection;
+    }
+    return this.collection;
+  }
+
   static async deleteMany(ids: string[]) {
+    const collection = await this.getCoolection();
     await collection.deleteMany({
       externalId: {
         $in: ids,
@@ -42,10 +57,12 @@ export class HttpSchedullerService {
     }
   }
   static async getAll() {
+    const collection = await this.getCoolection();
     const httpScheduller = await collection.find({}).toArray();
     return httpScheduller.map(removeInternalId);
   }
   static async createOrUpdateMany(httpScheduller: HttpScheduller[]) {
+    const collection = await this.getCoolection();
     for (const http of httpScheduller) {
       await collection.updateOne(
         {
@@ -66,12 +83,14 @@ export class HttpSchedullerService {
     }
   }
   static async getById(id: string) {
+    const collection = await this.getCoolection();
     const httpScheduller = await collection.findOne({
       externalId: id,
     });
     return httpScheduller ? removeInternalId(httpScheduller) : null;
   }
   static async deleteById(id: string) {
+    const collection = await this.getCoolection();
     await collection.deleteOne({
       externalId: id,
     });
