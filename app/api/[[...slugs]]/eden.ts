@@ -1,4 +1,6 @@
 import { treaty } from "@elysia/eden";
 import type { App } from "./route";
 
-export const client = treaty<App>("localhost:3000");
+export function getClient() {
+  return treaty<App>(window.location.origin);
+}
