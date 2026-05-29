@@ -77,7 +77,7 @@ export class HttpSchedullerService {
       );
       await CronnerService.addJob({
         id: http.externalId,
-        type: http.triggerType,
+        triggerType: http.triggerType,
         triggerValue: http.triggerValue,
       });
     }
@@ -104,20 +104,30 @@ export class HttpSchedullerService {
   }) {
     const MAX_BODY_BYTES = 64 * 1024;
     const start = Date.now();
+
+    const TIMEOUT_MS = 15000;
+    const controller = new AbortController();
+    let timeout: ReturnType<typeof setTimeout> | undefined;
+
     try {
+      timeout = setTimeout(() => controller.abort(), TIMEOUT_MS);
+
       const init: RequestInit = {
         method: payload.method,
         headers: payload.headers,
+        signal: controller.signal,
       };
       if (payload.method !== "GET" && payload.body) {
         init.body = payload.body;
       }
+
       const response = await fetch(payload.url, init);
       const raw = await response.text();
       const truncated =
         raw.length > MAX_BODY_BYTES
           ? raw.slice(0, MAX_BODY_BYTES) + "\n…[truncated]"
           : raw;
+
       return {
         ok: response.ok,
         status: response.status,
@@ -132,6 +142,8 @@ export class HttpSchedullerService {
         timeMs: Date.now() - start,
         error: err instanceof Error ? err.message : String(err),
       };
+    } finally {
+      if (timeout) clearTimeout(timeout);
     }
   }
 }

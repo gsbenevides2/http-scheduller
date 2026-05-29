@@ -1,15 +1,8 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { HttpScheduller } from "../services/HttpScheduller";
 import { formatTriggerValue } from "../utils/formatTriggerValue";
 import SchedulerFormModal from "./SchedulerFormModal";
-
-export type SchedulerTestResult = {
-  ok: boolean;
-  status?: number;
-  body?: string;
-  timeMs?: number;
-  error?: string;
-};
+import { SchedulerTestResult } from "../types/SchedulerTestResult";
 
 interface SchedulerDetailsModalProps {
   scheduler: HttpScheduller | null;
@@ -25,20 +18,34 @@ export default function SchedulerDetailsModal({
   onTest,
 }: SchedulerDetailsModalProps) {
   const [editOpen, setEditOpen] = useState(false);
+
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState<SchedulerTestResult | null>(null);
   const [testError, setTestError] = useState<string | null>(null);
 
-  const canShow = !!scheduler;
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
   const details = useMemo(() => scheduler, [scheduler]);
 
-  if (!canShow || !details) return null;
+  useEffect(() => {
+    if (!details) return;
+    // Reset test state when switching to another scheduler
+    setTesting(false);
+    setTestResult(null);
+    setTestError(null);
+    // Also reset edit submission state
+    setIsSubmitting(false);
+    setSubmitError(null);
+  }, [details?.externalId]);
+
+  if (!details) return null;
 
   const handleTest = async () => {
-    if (!details) return;
     setTesting(true);
     setTestError(null);
     setTestResult(null);
+
     try {
       const res = await onTest(details);
       setTestResult(res);
@@ -72,7 +79,9 @@ export default function SchedulerDetailsModal({
             </div>
             <div>
               <label className="font-semibold text-gray-400">Trigger Value:</label>
-              <p className="text-gray-200">{formatTriggerValue(details.triggerType, details.triggerValue)}</p>
+              <p className="text-gray-200">
+                {formatTriggerValue(details.triggerType, details.triggerValue)}
+              </p>
             </div>
             <div>
               <label className="font-semibold text-gray-400">Method:</label>
@@ -83,8 +92,12 @@ export default function SchedulerDetailsModal({
               <p className="text-gray-200 break-all">{details.url}</p>
             </div>
             <div>
-              <label className="font-semibold text-gray-400">Excluir Antes da Execução:</label>
-              <p className="text-gray-200">{details.excludeBeforeExecution ? "Sim" : "Não"}</p>
+              <label className="font-semibold text-gray-400">
+                Excluir Antes da Execução:
+              </label>
+              <p className="text-gray-200">
+                {details.excludeBeforeExecution ? "Sim" : "Não"}
+              </p>
             </div>
 
             <div>
@@ -103,10 +116,22 @@ export default function SchedulerDetailsModal({
 
             <div className="pt-2">
               <div className="flex flex-wrap items-center gap-2">
-                <button className="btn btn-primary" onClick={() => setEditOpen(true)}>
+                <button
+                  className="btn btn-primary"
+                  onClick={() => {
+                    setSubmitError(null);
+                    setEditOpen(true);
+                  }}
+                  type="button"
+                >
                   Editar
                 </button>
-                <button className="btn" onClick={handleTest} disabled={testing}>
+                <button
+                  className="btn"
+                  onClick={handleTest}
+                  disabled={testing}
+                  type="button"
+                >
                   {testing ? "Testando..." : "Teste"}
                 </button>
               </div>
@@ -120,9 +145,14 @@ export default function SchedulerDetailsModal({
                   <div className="text-sm">
                     <span className="font-semibold">Resultado:</span>{" "}
                     {testResult.ok ? "OK" : "Falha"}
-                    {typeof testResult.status === "number" ? ` (HTTP ${testResult.status})` : ""}
-                    {typeof testResult.timeMs === "number" ? ` - ${testResult.timeMs}ms` : ""}
+                    {typeof testResult.status === "number"
+                      ? ` (HTTP ${testResult.status})`
+                      : ""}
+                    {typeof testResult.timeMs === "number"
+                      ? ` - ${testResult.timeMs}ms`
+                      : ""}
                   </div>
+
                   {typeof testResult.body === "string" ? (
                     <pre className="bg-zinc-800 p-3 rounded overflow-x-auto text-gray-200 max-h-64 whitespace-pre-wrap">
                       {testResult.body || "(vazio)"}
@@ -140,15 +170,30 @@ export default function SchedulerDetailsModal({
       </dialog>
 
       <SchedulerFormModal
+        key={details.externalId}
         isOpen={editOpen}
         initialValue={details}
         disableExternalId={false}
         title="Editar Request"
         submitLabel="Salvar"
-        onCancel={() => setEditOpen(false)}
-        onSubmit={async (next) => {
-          await onUpsert(next);
+        isSubmitting={isSubmitting}
+        submitError={submitError}
+        onCancel={() => {
+          setSubmitError(null);
+          setIsSubmitting(false);
           setEditOpen(false);
+        }}
+        onSubmit={async (next) => {
+          setIsSubmitting(true);
+          setSubmitError(null);
+          try {
+            await onUpsert(next);
+            setEditOpen(false);
+          } catch (e) {
+            setSubmitError(e instanceof Error ? e.message : String(e));
+          } finally {
+            setIsSubmitting(false);
+          }
         }}
       />
     </>

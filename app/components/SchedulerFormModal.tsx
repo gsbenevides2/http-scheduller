@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { HttpScheduller } from "../services/HttpScheduller";
 
 type SchedulerFormModalProps = {
@@ -40,6 +40,11 @@ export default function SchedulerFormModal({
   const initialBody = initialValue?.body ?? "";
 
   const [externalId, setExternalId] = useState(initialValue?.externalId ?? "");
+  const [localError, setLocalError] = useState<string | null>(null);
+
+  // Remount-based form reset is handled by the parent via `key`.
+  // Keep this component purely controlled by its initial state.
+
   const [triggerType, setTriggerType] = useState<"cron" | "date">(
     initialValue?.triggerType ?? "cron"
   );
@@ -56,26 +61,17 @@ export default function SchedulerFormModal({
   const [headersText, setHeadersText] = useState(initialHeadersText);
   const [body, setBody] = useState(initialBody);
 
-  useEffect(() => {
-    if (!isOpen) return;
 
-    setExternalId(initialValue?.externalId ?? "");
-    setTriggerType(initialValue?.triggerType ?? "cron");
-    setTriggerValue(initialValue?.triggerValue ?? "");
-    setExcludeBeforeExecution(initialValue?.excludeBeforeExecution ?? true);
-    setMethod(initialValue?.method ?? "GET");
-    setUrl(initialValue?.url ?? "");
-    setHeadersText(safeStringifyHeaders(initialValue?.headers));
-    setBody(initialValue?.body ?? "");
-  }, [isOpen, initialValue]);
 
   if (!isOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    setLocalError(null);
+
     if (!externalId.trim()) {
-      alert("External ID é obrigatório.");
+      setLocalError("External ID é obrigatório.");
       return;
     }
 
@@ -92,7 +88,7 @@ export default function SchedulerFormModal({
         }
       }
     } catch (err) {
-      alert(`Headers inválidos: ${(err as Error).message}`);
+      setLocalError(`Headers inválidos: ${(err as Error).message}`);
       return;
     }
 
@@ -209,6 +205,10 @@ export default function SchedulerFormModal({
               />
             </div>
           </div>
+
+          {localError ? (
+            <div className="text-sm text-red-400">{localError}</div>
+          ) : null}
 
           {submitError ? (
             <div className="text-sm text-red-400">{submitError}</div>

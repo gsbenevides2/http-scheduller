@@ -154,6 +154,7 @@ export default function Home() {
       />
 
       <SchedulerFormModal
+        key="new"
         isOpen={isCreateOpen}
         initialValue={null}
         disableExternalId={false}

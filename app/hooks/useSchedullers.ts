@@ -1,14 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { HttpScheduller } from "../services/HttpScheduller";
 import { getClient } from "../api/[[...slugs]]/eden";
-
-export type SchedulerTestResult = {
-  ok: boolean;
-  status?: number;
-  body?: string;
-  timeMs?: number;
-  error?: string;
-};
+import { SchedulerTestResult } from "../types/SchedulerTestResult";
 
 export default function useSchedulers() {
   const [isLoading, setIsLoading] = useState(true);
