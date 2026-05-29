@@ -17,7 +17,7 @@ type WithIdHttpScheduller = HttpScheduller & {
   _id: ObjectId;
 };
 
-const mongoClient = await MongoClient.connect(getEnv("MONGO_URI"), {
+const mongoClient = await MongoClient.connect(getEnv("MONGO_URI", false), {
   authSource: "http-scheduller",
 });
 
