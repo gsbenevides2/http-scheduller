@@ -1,0 +1,28 @@
+name: Coolify Deploy
+
+on:
+  workflow_run:
+    workflows:
+      - Docker
+    types:
+      - completed
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion == 'success'
+    steps:
+      - name: Trigger Coolify deploy
+        run: |
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            -X POST "${{ vars.COOLIFY_WEBHOOK_URL }}" \
+            -H "Authorization: Bearer ${{ secrets.COOLIFY_TOKEN }}")
+
+          echo "Coolify responded with HTTP $HTTP_STATUS"
+
+          if [[ "$HTTP_STATUS" -lt 200 || "$HTTP_STATUS" -ge 300 ]]; then
+            echo "Deploy request failed with status $HTTP_STATUS"
+            exit 1
+          fi
+
+          echo "Deploy triggered successfully"

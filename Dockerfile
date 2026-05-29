@@ -1,26 +1,27 @@
-# Use the official Bun image
-FROM oven/bun
-
-# Set working directory
+# ---- deps ----
+FROM oven/bun:1 AS deps
 WORKDIR /app
+COPY package.json bun.lock ./
+RUN bun install --frozen-lockfile
 
-# Install curl
-RUN apt-get update && apt-get install -y curl git
-
-# Copy package files
-COPY package*.json bun.lock ./
-
-# Copy project files
+# ---- builder ----
+FROM oven/bun:1 AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+ENV NEXT_SERVER_ACTIONS_ENCRYPTION_KEY=G2JJQRhnVO8lj37ZFRmB2/s+nBCVz2dp3OAJ9rQzH7M=
+RUN bun run build
 
-# Install dependencies
-RUN bun install
+# ---- runner ----
+FROM oven/bun:1-slim AS runner
+ENV NODE_ENV=production
 
-# Custom Swagger
-RUN bun run swagger:build
+COPY --from=builder /app/.next/standalone/app /app
+COPY --from=builder /app/public /app/public
+COPY --from=builder /app/.next/static /app/.next/static
 
-# Expose port 3000
 EXPOSE 3000
+ENV PORT=3000
+ENV HOSTNAME=0.0.0.0
 
-# Start the application
-CMD ["bun", "start"] 
+CMD ["bun", "/app/server.js"]
