@@ -95,4 +95,43 @@ export class HttpSchedullerService {
       externalId: id,
     });
   }
+
+  static async testRequest(payload: {
+    url: string;
+    method: HttpScheduller["method"];
+    headers: Record<string, string>;
+    body: string;
+  }) {
+    const MAX_BODY_BYTES = 64 * 1024;
+    const start = Date.now();
+    try {
+      const init: RequestInit = {
+        method: payload.method,
+        headers: payload.headers,
+      };
+      if (payload.method !== "GET" && payload.body) {
+        init.body = payload.body;
+      }
+      const response = await fetch(payload.url, init);
+      const raw = await response.text();
+      const truncated =
+        raw.length > MAX_BODY_BYTES
+          ? raw.slice(0, MAX_BODY_BYTES) + "\n…[truncated]"
+          : raw;
+      return {
+        ok: response.ok,
+        status: response.status,
+        body: truncated,
+        timeMs: Date.now() - start,
+      };
+    } catch (err) {
+      return {
+        ok: false,
+        status: 0,
+        body: "",
+        timeMs: Date.now() - start,
+        error: err instanceof Error ? err.message : String(err),
+      };
+    }
+  }
 }

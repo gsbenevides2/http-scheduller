@@ -2,6 +2,14 @@ import { useCallback, useEffect, useState } from "react";
 import { HttpScheduller } from "../services/HttpScheduller";
 import { getClient } from "../api/[[...slugs]]/eden";
 
+export type SchedulerTestResult = {
+  ok: boolean;
+  status?: number;
+  body?: string;
+  timeMs?: number;
+  error?: string;
+};
+
 export default function useSchedulers() {
   const [isLoading, setIsLoading] = useState(true);
   const [schedulers, setSchedulers] = useState<HttpScheduller[]>([]);
@@ -10,12 +18,11 @@ export default function useSchedulers() {
   const loadSchedulers = useCallback(async () => {
     setIsLoading(true);
     setError(null);
+
     const client = getClient();
     try {
       const res = await client.api["http-scheduller"].get();
-      if (res.data) {
-        setSchedulers(res.data);
-      }
+      if (res.data) setSchedulers(res.data);
     } catch (err) {
       console.error("Failed to load schedulers", err);
       setError("Failed to load schedulers");
@@ -25,39 +32,63 @@ export default function useSchedulers() {
   }, []);
 
   useEffect(() => {
-    const client = getClient();
-    client.api["http-scheduller"]
-      .get()
-      .then((res) => {
-        if (res.data) {
-          setSchedulers(res.data);
-        }
-      })
-      .catch((err) => {
-        console.error("Failed to load schedulers", err);
-        setError("Failed to load schedulers");
-      })
-      .finally(() => {
-        setIsLoading(false);
-      });
-  }, []);
+    // load once
+    loadSchedulers();
+  }, [loadSchedulers]);
+
+  const upsertScheduler = useCallback(
+    async (scheduler: HttpScheduller) => {
+      const client = getClient();
+      const res = await client.api["http-scheduller"].post([scheduler]);
+      if (res.status !== 204) {
+        throw new Error("Falha ao salvar agendamento");
+      }
+      await loadSchedulers();
+    },
+    [loadSchedulers],
+  );
 
   const deleteScheduler = useCallback(
     async (externalId: string) => {
-      try {
-        const client = getClient();
-        const res = await client.api["http-scheduller"].delete([externalId]);
-        if (res.status === 204) {
-          await loadSchedulers();
-          return true;
-        }
-        return false;
-      } catch (err) {
-        console.error("Failed to delete scheduler", err);
-        throw err;
+      const client = getClient();
+      const res = await client.api["http-scheduller"].delete([externalId]);
+      if (res.status === 204) {
+        await loadSchedulers();
+        return true;
       }
+      return false;
     },
     [loadSchedulers],
+  );
+
+  const testScheduler = useCallback(
+    async (scheduler: HttpScheduller): Promise<SchedulerTestResult> => {
+      const origin = window.location.origin;
+      const externalId = encodeURIComponent(scheduler.externalId);
+
+      const startedAt = Date.now();
+      const res = await fetch(`${origin}/api/http-scheduller/test/${externalId}`, {
+        method: "POST",
+      });
+      const timeMs = Date.now() - startedAt;
+
+      const data = (await res.json().catch(() => null)) as
+        | SchedulerTestResult
+        | null;
+
+      if (!data) {
+        return {
+          ok: false,
+          status: res.status,
+          body: undefined,
+          timeMs,
+          error: "Resposta inválida do servidor",
+        };
+      }
+
+      return { ...data, timeMs };
+    },
+    [],
   );
 
   return {
@@ -65,6 +96,8 @@ export default function useSchedulers() {
     schedulers,
     error,
     reload: loadSchedulers,
+    upsertScheduler,
     deleteScheduler,
+    testScheduler,
   };
 }
