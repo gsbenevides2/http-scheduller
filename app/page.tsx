@@ -29,16 +29,24 @@ export default function Home() {
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const handleDelete = async () => {
     if (!schedulerToDelete) return;
+
+    setDeleteError(null);
     setIsDeleting(true);
     try {
-      await deleteScheduler(schedulerToDelete);
+      const ok = await deleteScheduler(schedulerToDelete);
+      if (!ok) {
+        setDeleteError("Não foi possível excluir o agendamento.");
+        return;
+      }
       setSchedulerToDelete(null);
-    } catch (_) {
-      alert("Erro ao excluir agendamento");
+    } catch {
+      setDeleteError("Erro ao excluir agendamento.");
     } finally {
       setIsDeleting(false);
     }
