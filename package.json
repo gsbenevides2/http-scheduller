@@ -2,7 +2,7 @@
   "name": "http-scheduller",
   "description": "Sistema CRUD para agendar a execução de requisições HTTP",
   "type": "module",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "private": true,
   "license": "MIT",
   "author": {

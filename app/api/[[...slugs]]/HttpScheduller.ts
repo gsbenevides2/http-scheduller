@@ -59,6 +59,71 @@ const httpSchedullerSchema = t.Object({
   }),
 });
 
+const testRequestSchema = t.Object({
+  url: t.String({
+    title: "URL",
+    description: "The URL to dispatch the test request to",
+    example: "https://www.google.com",
+  }),
+  method: t.Union(
+    [
+      t.Literal("GET"),
+      t.Literal("POST"),
+      t.Literal("PUT"),
+      t.Literal("DELETE"),
+      t.Literal("PATCH"),
+    ],
+    {
+      title: "Method",
+      description: "The HTTP method of the test request",
+      example: "GET",
+    },
+  ),
+  headers: t.Record(t.String(), t.String(), {
+    title: "Headers",
+    description: "The headers of the test request",
+    example: {
+      "Content-Type": "application/json",
+    },
+  }),
+  body: t.String({
+    title: "Body",
+    description: "The body of the test request",
+    example: "",
+  }),
+});
+
+const testResponseSchema = t.Object(
+  {
+    ok: t.Boolean({
+      title: "OK",
+      description: "Whether the test request completed without throwing",
+    }),
+    status: t.Number({
+      title: "HTTP Status",
+      description: "The HTTP status code returned by the target",
+    }),
+    body: t.String({
+      title: "Response Body",
+      description: "The response body returned by the target (truncated)",
+    }),
+    timeMs: t.Number({
+      title: "Time (ms)",
+      description: "Elapsed time of the test request in milliseconds",
+    }),
+    error: t.Optional(
+      t.String({
+        title: "Error",
+        description: "Error message if the test request failed to complete",
+      }),
+    ),
+  },
+  {
+    title: "Test Response",
+    description: "Result of dispatching a test http scheduller request",
+  },
+);
+
 const exemple: HttpScheduller = {
   externalId: "1234567890",
   triggerType: "cron",
@@ -141,6 +206,63 @@ const HttpSchedullerController = new Elysia({
       }),
       response: {
         [StatusMap["No Content"]]: t.Undefined(),
+      },
+    },
+  )
+  .post(
+    "/test/:id",
+    async ({ params, status }) => {
+      const scheduller = await HttpSchedullerService.getById(params.id);
+      if (!scheduller) {
+        return status(StatusMap["Not Found"], {
+          ok: false,
+          status: 0,
+          body: "",
+          timeMs: 0,
+          error: "Http scheduller not found",
+        });
+      }
+      const result = await HttpSchedullerService.testRequest({
+        url: scheduller.url,
+        method: scheduller.method,
+        headers: scheduller.headers,
+        body: scheduller.body,
+      });
+      return status(StatusMap.OK, result);
+    },
+    {
+      detail: {
+        summary: "Test a stored http scheduller",
+        description:
+          "Immediately dispatches the request defined by the stored http scheduller and returns the result",
+      },
+      params: t.Object({
+        id: t.String({
+          title: "External ID",
+          description: "The external ID of the http scheduller",
+        }),
+      }),
+      response: {
+        [StatusMap.OK]: testResponseSchema,
+        [StatusMap["Not Found"]]: testResponseSchema,
+      },
+    },
+  )
+  .post(
+    "/test",
+    async ({ body, status }) => {
+      const result = await HttpSchedullerService.testRequest(body);
+      return status(StatusMap.OK, result);
+    },
+    {
+      detail: {
+        summary: "Test an http request payload",
+        description:
+          "Immediately dispatches the provided request and returns the result",
+      },
+      body: testRequestSchema,
+      response: {
+        [StatusMap.OK]: testResponseSchema,
       },
     },
   );
