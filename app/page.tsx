@@ -148,6 +148,7 @@ export default function Home() {
         onClose={() => setSelectedScheduler(null)}
         onUpsert={async (next) => {
           await upsertScheduler(next);
+          setSelectedScheduler(next);
         }}
         onTest={async (s) => {
           return await testScheduler(s);

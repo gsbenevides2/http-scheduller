@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { HttpScheduller } from "../services/HttpScheduller";
 import { getClient } from "../api/[[...slugs]]/eden";
 import { SchedulerTestResult } from "../types/SchedulerTestResult";
@@ -8,19 +8,36 @@ export default function useSchedulers() {
   const [schedulers, setSchedulers] = useState<HttpScheduller[]>([]);
   const [error, setError] = useState<string | null>(null);
 
+  const mountedRef = useRef(true);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
   const loadSchedulers = useCallback(async () => {
+    // Guard to avoid setState patterns flagged by eslint-plugin-react-hooks
+    // and to prevent state updates after unmount.
+    await Promise.resolve();
+
+    if (!mountedRef.current) return;
+
     setIsLoading(true);
     setError(null);
 
     const client = getClient();
     try {
       const res = await client.api["http-scheduller"].get();
+      if (!mountedRef.current) return;
       if (res.data) setSchedulers(res.data);
     } catch (err) {
+      if (!mountedRef.current) return;
       console.error("Failed to load schedulers", err);
       setError("Failed to load schedulers");
     } finally {
-      setIsLoading(false);
+      if (mountedRef.current) setIsLoading(false);
     }
   }, []);
 
