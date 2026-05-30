@@ -19,6 +19,9 @@ type CronnerJob =
 
 type JobHandle = CronJob | ReturnType<typeof setTimeout>;
 
+// Maximum safe setTimeout delay (signed 32-bit int max)
+const MAX_TIMEOUT_MS = 2_147_483_647;
+
 export class CronnerService {
   static jobs = new Map<string, JobHandle>();
 
@@ -44,11 +47,33 @@ export class CronnerService {
       return;
     }
 
-    const delayMs = Math.max(0, targetDate.getTime() - Date.now());
-    const handle = setTimeout(async () => {
-      await CronnerService.processJob(job.id);
-    }, delayMs);
-    this.jobs.set(job.id, handle);
+    CronnerService.scheduleTimeout(job.id, targetDate);
+  }
+
+  private static scheduleTimeout(jobId: string, targetDate: Date) {
+    const remaining = targetDate.getTime() - Date.now();
+
+    if (remaining <= 0) {
+      // Target time has passed, execute immediately
+      CronnerService.processJob(jobId);
+      return;
+    }
+
+    // Schedule timeout with safe delay (chunk if necessary)
+    const delay = Math.min(remaining, MAX_TIMEOUT_MS);
+    const handle = setTimeout(() => {
+      const newRemaining = targetDate.getTime() - Date.now();
+
+      if (newRemaining <= 0) {
+        // Time to execute
+        CronnerService.processJob(jobId);
+      } else {
+        // Reschedule for remaining time
+        CronnerService.scheduleTimeout(jobId, targetDate);
+      }
+    }, delay);
+
+    this.jobs.set(jobId, handle);
   }
 
   static checkJobExists(id: string) {

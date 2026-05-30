@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { HttpScheduller } from "../services/HttpScheduller";
 import { formatTriggerValue } from "../utils/formatTriggerValue";
 import SchedulerFormModal from "./SchedulerFormModal";
@@ -20,24 +20,15 @@ export default function SchedulerDetailsModal({
   const [editOpen, setEditOpen] = useState(false);
 
   const [testing, setTesting] = useState(false);
-  const [testResult, setTestResult] = useState<SchedulerTestResult | null>(null);
+  const [testResult, setTestResult] = useState<SchedulerTestResult | null>(
+    null,
+  );
   const [testError, setTestError] = useState<string | null>(null);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const details = useMemo(() => scheduler, [scheduler]);
-
-  useEffect(() => {
-    if (!details) return;
-    // Reset test state when switching to another scheduler
-    setTesting(false);
-    setTestResult(null);
-    setTestError(null);
-    // Also reset edit submission state
-    setIsSubmitting(false);
-    setSubmitError(null);
-  }, [details?.externalId]);
 
   if (!details) return null;
 
@@ -61,7 +52,7 @@ export default function SchedulerDetailsModal({
     <>
       <dialog className="modal modal-open">
         <div className="max-w-3xl modal-box">
-          <div className="flex items-center justify-between gap-4">
+          <div className="flex justify-between items-center gap-4">
             <h3 className="mb-4 font-bold text-lg">Detalhes do Agendamento</h3>
             <button className="btn" onClick={onClose}>
               Fechar
@@ -70,15 +61,21 @@ export default function SchedulerDetailsModal({
 
           <div className="space-y-3">
             <div>
-              <label className="font-semibold text-gray-400">External ID:</label>
+              <label className="font-semibold text-gray-400">
+                External ID:
+              </label>
               <p className="text-gray-200 break-all">{details.externalId}</p>
             </div>
             <div>
-              <label className="font-semibold text-gray-400">Trigger Type:</label>
+              <label className="font-semibold text-gray-400">
+                Trigger Type:
+              </label>
               <p className="text-gray-200">{details.triggerType}</p>
             </div>
             <div>
-              <label className="font-semibold text-gray-400">Trigger Value:</label>
+              <label className="font-semibold text-gray-400">
+                Trigger Value:
+              </label>
               <p className="text-gray-200">
                 {formatTriggerValue(details.triggerType, details.triggerValue)}
               </p>
@@ -137,11 +134,11 @@ export default function SchedulerDetailsModal({
               </div>
 
               {testError ? (
-                <div className="mt-3 text-sm text-red-400">{testError}</div>
+                <div className="mt-3 text-red-400 text-sm">{testError}</div>
               ) : null}
 
               {testResult ? (
-                <div className="mt-3 space-y-2">
+                <div className="space-y-2 mt-3">
                   <div className="text-sm">
                     <span className="font-semibold">Resultado:</span>{" "}
                     {testResult.ok ? "OK" : "Falha"}
@@ -154,7 +151,7 @@ export default function SchedulerDetailsModal({
                   </div>
 
                   {typeof testResult.body === "string" ? (
-                    <pre className="bg-zinc-800 p-3 rounded overflow-x-auto text-gray-200 max-h-64 whitespace-pre-wrap">
+                    <pre className="bg-zinc-800 p-3 rounded max-h-64 overflow-x-auto text-gray-200 whitespace-pre-wrap">
                       {testResult.body || "(vazio)"}
                     </pre>
                   ) : null}
@@ -173,7 +170,7 @@ export default function SchedulerDetailsModal({
         key={details.externalId}
         isOpen={editOpen}
         initialValue={details}
-        disableExternalId={false}
+        disableExternalId={true}
         title="Editar Request"
         submitLabel="Salvar"
         isSubmitting={isSubmitting}

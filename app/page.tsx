@@ -18,9 +18,8 @@ export default function Home() {
     testScheduler,
   } = useSchedulers();
 
-  const [selectedScheduler, setSelectedScheduler] = useState<
-    HttpScheduller | null
-  >(null);
+  const [selectedScheduler, setSelectedScheduler] =
+    useState<HttpScheduller | null>(null);
 
   const [schedulerToDelete, setSchedulerToDelete] = useState<string | null>(
     null,
@@ -114,7 +113,9 @@ export default function Home() {
                   className="hover:bg-zinc-800 cursor-pointer"
                   onClick={() => setSelectedScheduler(scheduller)}
                 >
-                  <td className="max-w-100 truncate">{scheduller.externalId}</td>
+                  <td className="max-w-100 truncate">
+                    {scheduller.externalId}
+                  </td>
                   <td>{scheduller.triggerType}</td>
                   <td>
                     {formatTriggerValue(
@@ -144,6 +145,7 @@ export default function Home() {
       </div>
 
       <SchedulerDetailsModal
+        key={selectedScheduler?.externalId}
         scheduler={selectedScheduler}
         onClose={() => setSelectedScheduler(null)}
         onUpsert={async (next) => {
