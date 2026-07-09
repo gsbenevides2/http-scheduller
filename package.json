@@ -1,6 +1,6 @@
 {
   "name": "http-scheduller",
-  "description": "Sistema CRUD para agendar a execu\u00e7\u00e3o de requisi\u00e7\u00f5es HTTP",
+  "description": "Sistema CRUD para agendar a execução de requisições HTTP",
   "type": "module",
   "version": "1.0.6",
   "private": true,
