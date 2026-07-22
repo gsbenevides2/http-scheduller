@@ -1,4 +1,4 @@
-import { CronnerService } from "./app/services/Cronner";
+import { CronnerService } from "./server/services/Cronner";
 
 export function register() {
   CronnerService.gracefulStart();

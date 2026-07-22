@@ -1,5 +1,6 @@
 {
   "name": "http-scheduller",
+  "displayName": "HTTP Scheduller",
   "description": "Sistema CRUD para agendar a execução de requisições HTTP",
   "type": "module",
   "version": "1.0.6",
@@ -18,24 +19,28 @@
     "dev": "bun --bun next dev",
     "build": "bun --bun next build",
     "start": "bun --bun next start",
-    "lint": "bun --bun eslint"
+    "lint": "bun --bun eslint",
+    "db:sync": "bun --bun run drizzle-kit push --config server/db/drizzle.config.ts",
+    "db:studio": "bun --bun run drizzle-kit studio --config server/db/drizzle.config.ts"
   },
   "dependencies": {
     "@elysia/eden": "^1.4.10",
-    "@elysiajs/openapi": "^1.4.15",
-    "@scalar/types": "^0.12.2",
-    "elysia": "^1.4.28",
-    "mongodb": "^7.2.0",
+    "@elysia/openapi": "^1.4.15",
+    "@tanstack/react-query": "^5.101.4",
+    "drizzle-orm": "^1.0.0-rc.4",
+    "elysia": "^1.4.29",
     "next": "16.2.4",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
-    "@types/bun": "^1.3.13",
+    "@types/bun": "^1.3.14",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "daisyui": "^5.5.19",
+    "drizzle-kit": "^1.0.0-rc.4",
     "eslint": "^9",
     "eslint-config-next": "16.2.4",
     "sass": "^1.99.0",

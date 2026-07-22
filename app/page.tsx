@@ -1,9 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import useSchedulers from "./hooks/useSchedullers";
+import {
+  HttpSchedullerReceived,
+  HttpSchedullerToAdd,
+  useSchedulersQuery,
+} from "./hooks/useSchedulersQuery";
 import { formatTriggerValue } from "./utils/formatTriggerValue";
-import { HttpScheduller } from "./services/HttpScheduller";
+
 import SchedulerDetailsModal from "./components/SchedulerDetailsModal";
 import DeleteConfirmationModal from "./components/DeleteConfirmationModal";
 import SchedulerFormModal from "./components/SchedulerFormModal";
@@ -16,10 +20,11 @@ export default function Home() {
     deleteScheduler,
     upsertScheduler,
     testScheduler,
-  } = useSchedulers();
+  } = useSchedulersQuery();
 
-  const [selectedScheduler, setSelectedScheduler] =
-    useState<HttpScheduller | null>(null);
+  const [selectedScheduler, setSelectedScheduler] = useState<
+    HttpSchedullerReceived | HttpSchedullerToAdd | null
+  >(null);
 
   const [schedulerToDelete, setSchedulerToDelete] = useState<string | null>(
     null,
@@ -30,7 +35,7 @@ export default function Home() {
   const [isSaving, setIsSaving] = useState(false);
 
   const [saveError, setSaveError] = useState<string | null>(null);
-  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [, setDeleteError] = useState<string | null>(null);
 
   const handleDelete = async () => {
     if (!schedulerToDelete) return;
@@ -51,7 +56,7 @@ export default function Home() {
     }
   };
 
-  const handleCreateSave = async (scheduler: HttpScheduller) => {
+  const handleCreateSave = async (scheduler: HttpSchedullerToAdd) => {
     setIsSaving(true);
     setSaveError(null);
     try {
