@@ -69,6 +69,9 @@ export default function Home() {
     }
   };
 
+  const isError = isLoading === false && Boolean(error);
+  const isEmpty = isLoading === false && schedulers.length === 0;
+
   return (
     <div className="flex flex-col flex-1 bg-zinc-50 dark:bg-black px-20 py-10 font-sans">
       <div className="flex justify-between items-start">
@@ -100,51 +103,56 @@ export default function Home() {
 
           <tbody>
             {isLoading ? (
-              <td colSpan={7} className="text-center">
-                Carregando...
-              </td>
-            ) : error ? (
-              <td colSpan={7} className="text-red-500 text-center">
-                {error}
-              </td>
-            ) : schedulers.length === 0 ? (
-              <td colSpan={7} className="text-gray-500 text-center">
-                Nenhum agendamento encontrado.
-              </td>
-            ) : (
-              schedulers.map((scheduller) => (
-                <tr
-                  key={scheduller.externalId}
-                  className="hover:bg-zinc-800 cursor-pointer"
-                  onClick={() => setSelectedScheduler(scheduller)}
-                >
-                  <td className="max-w-100 truncate">
-                    {scheduller.externalId}
-                  </td>
-                  <td>{scheduller.triggerType}</td>
-                  <td>
-                    {formatTriggerValue(
-                      scheduller.triggerType,
-                      scheduller.triggerValue,
-                    )}
-                  </td>
-                  <td>{scheduller.method}</td>
-                  <td>{scheduller.url}</td>
-                  <td>{scheduller.excludeBeforeExecution ? "Sim" : "Não"}</td>
-                  <td>
-                    <button
-                      className="text-white btn btn-sm btn-error"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSchedulerToDelete(scheduller.externalId);
-                      }}
-                    >
-                      Excluir
-                    </button>
-                  </td>
-                </tr>
-              ))
-            )}
+              <tr>
+                <td colSpan={7} className="text-center">
+                  Carregando...
+                </td>
+              </tr>
+            ) : null}
+            {isError ? (
+              <tr>
+                <td colSpan={7} className="text-red-500 text-center">
+                  {error}
+                </td>
+              </tr>
+            ) : null}
+            {isEmpty ? (
+              <tr>
+                <td colSpan={7} className="text-gray-500 text-center">
+                  Nenhum agendamento encontrado.
+                </td>
+              </tr>
+            ) : null}
+            {schedulers.map((scheduller) => (
+              <tr
+                key={scheduller.externalId}
+                className="hover:bg-zinc-800 cursor-pointer"
+                onClick={() => setSelectedScheduler(scheduller)}
+              >
+                <td className="max-w-100 truncate">{scheduller.externalId}</td>
+                <td>{scheduller.triggerType}</td>
+                <td>
+                  {formatTriggerValue(
+                    scheduller.triggerType,
+                    scheduller.triggerValue,
+                  )}
+                </td>
+                <td>{scheduller.method}</td>
+                <td>{scheduller.url}</td>
+                <td>{scheduller.excludeBeforeExecution ? "Sim" : "Não"}</td>
+                <td>
+                  <button
+                    className="text-white btn btn-sm btn-error"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSchedulerToDelete(scheduller.externalId);
+                    }}
+                  >
+                    Excluir
+                  </button>
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>
