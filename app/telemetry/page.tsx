@@ -11,12 +11,12 @@ export default function TelemetryPage() {
   const [page, setPage] = useState(1);
   const limit = 50;
 
-  const { records, isLoading, error, stats, deleteRecords, clearAll } =
-    useTelemetryQuery(selectedScheduler || undefined);
+  const { records, isLoading, error, stats, total, deleteRecords, clearAll } =
+    useTelemetryQuery(selectedScheduler || undefined, page, limit);
   const { schedulers } = useSchedulersQuery();
 
-  const totalPages = Math.ceil(records.length / limit);
-  const paginatedRecords = records.slice((page - 1) * limit, page * limit);
+  const totalPages = Math.ceil(total / limit);
+  const paginatedRecords = records;
 
   const handleDelete = async (ids: number[]) => {
     if (!confirm("Tem certeza que deseja excluir os registros selecionados?")) return;

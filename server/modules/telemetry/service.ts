@@ -15,7 +15,12 @@ export class TelemetryService {
       ? eq(telemetry.schedulerExternalId, schedulerExternalId)
       : undefined;
 
-    const response = await db
+    const [totalResult] = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(telemetry)
+      .where(conditions);
+
+    const records = await db
       .select()
       .from(telemetry)
       .where(conditions)
@@ -23,7 +28,10 @@ export class TelemetryService {
       .limit(limit)
       .offset(offset);
 
-    return response;
+    return {
+      records,
+      total: totalResult?.count ?? 0,
+    };
   }
 
   static async getStats(
