@@ -4,6 +4,8 @@ import { schedulledRequests } from "@/server/db/schema";
 import { getColumns, inArray, SQL, sql } from "drizzle-orm";
 import { TelemetryService } from "@/server/modules/telemetry/service";
 import { PgTable } from "drizzle-orm/pg-core";
+import { ClientIdsService } from "@/server/modules/client_ids/service";
+import { loginInAuthentik } from "@/server/modules/authentik";
 
 const buildConflictUpdateColumns = <
   T extends PgTable,
@@ -82,9 +84,23 @@ export class SchedulledRequests {
     try {
       timeout = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
+      const headers: Record<string, string> = payload.headers ?? {};
+
+      if (payload.useAuthentikServiceAccount) {
+        const urlObj = new URL(payload.url);
+        const hostname = urlObj.hostname;
+        const clientRecord = await ClientIdsService.getByHostname(hostname);
+        if (clientRecord) {
+          const tokenResponse = await loginInAuthentik({
+            client_id: clientRecord.clientId,
+          });
+          headers["Authorization"] = `Bearer ${tokenResponse.access_token}`;
+        }
+      }
+
       const init: RequestInit = {
         method: payload.method,
-        headers: payload.headers ?? undefined,
+        headers,
         signal: controller.signal,
       };
       if (payload.method !== "GET" && payload.body) {

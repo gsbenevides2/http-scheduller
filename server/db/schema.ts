@@ -49,4 +49,12 @@ export const telemetry = pgTable("telemetry", {
     .default(sql`now()`),
 });
 
-export const relations = defineRelations({ schedulledRequests, telemetry });
+export const clientIds = pgTable("client_ids", {
+  hostname: text().primaryKey(),
+  clientId: text().notNull(),
+  createdAt: timestamp({ mode: "date" })
+    .notNull()
+    .default(sql`now()`),
+});
+
+export const relations = defineRelations({ schedulledRequests, telemetry, clientIds });

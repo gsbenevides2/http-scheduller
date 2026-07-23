@@ -81,6 +81,9 @@ export default function Home() {
           <p className="mt-2 text-gray-400">Gerencie seus agendamentos HTTP</p>
         </div>
         <div className="flex gap-2">
+          <Link href="/client-ids" className="text-white btn btn-outline">
+            Client IDs
+          </Link>
           <Link href="/telemetry" className="text-white btn btn-outline">
             Telemetria
           </Link>
