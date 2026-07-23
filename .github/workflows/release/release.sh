@@ -86,7 +86,9 @@ echo "Criando tag ${VERSION} se não existir..."
 
 TAG="v${VERSION}"
 
-if ! git rev-parse "$TAG" >/dev/null 2>&1; then
+if git ls-remote --exit-code --tags origin "$TAG" >/dev/null 2>&1; then
+    echo "Tag ${TAG} already exists on origin, skipping creation."
+else
     git tag "$TAG"
     git push origin "$TAG"
 fi
