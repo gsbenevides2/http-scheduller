@@ -1,29 +1,11 @@
 import { db } from "@/server/db";
 import { SchedulledRequest, SchedulledRequestsModel } from "./model";
 import { schedulledRequests } from "@/server/db/schema";
-import { getColumns, inArray, SQL, sql } from "drizzle-orm";
+import { inArray } from "drizzle-orm";
 import { TelemetryService } from "@/server/modules/telemetry/service";
-import { PgTable } from "drizzle-orm/pg-core";
 import { ClientIdsService } from "@/server/modules/client_ids/service";
 import { loginInAuthentik } from "@/server/modules/authentik";
-
-const buildConflictUpdateColumns = <
-  T extends PgTable,
-  Q extends keyof T["_"]["columns"],
->(
-  table: T,
-  columns: Q[],
-) => {
-  const cls = getColumns(table);
-  return columns.reduce(
-    (acc, column) => {
-      const colName = cls[column].name;
-      acc[column] = sql.raw(`excluded."${colName}"`);
-      return acc;
-    },
-    {} as Record<Q, SQL>,
-  );
-};
+import { buildConflictUpdateColumns } from "@/server/utils/buildConflictUpdateColumns";
 
 export class SchedulledRequests {
   static async getAll(): Promise<

@@ -1,10 +1,11 @@
 import { db } from "@/server/db";
 import { clientIds } from "@/server/db/schema";
-import { inArray, sql } from "drizzle-orm";
+import { inArray } from "drizzle-orm";
 import {
   ClientIdsModel,
   CreateOrUpdateClientIdBody,
 } from "./model";
+import { buildConflictUpdateColumns } from "@/server/utils/buildConflictUpdateColumns";
 
 export class ClientIdsService {
   static async getAll(): Promise<ClientIdsModel["getClientIdsResponse"]> {
@@ -32,9 +33,7 @@ export class ClientIdsService {
       )
       .onConflictDoUpdate({
         target: clientIds.hostname,
-        set: {
-          clientId: sql.raw(`excluded."client_id"`),
-        },
+        set: buildConflictUpdateColumns(clientIds, ["clientId"]),
       });
   }
 
