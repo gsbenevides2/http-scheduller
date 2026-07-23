@@ -16,7 +16,7 @@ const buildConflictUpdateColumns = <
   return columns.reduce(
     (acc, column) => {
       const colName = cls[column].name;
-      acc[column] = sql.raw(`excluded.${colName}`);
+      acc[column] = sql.raw(`excluded."${colName}"`);
       return acc;
     },
     {} as Record<Q, SQL>,
@@ -36,7 +36,12 @@ export class SchedulledRequests {
   ): Promise<void> {
     await db
       .insert(schedulledRequests)
-      .values(requests)
+      .values(
+        requests.map((r) => ({
+          ...r,
+          headers: r.headers ?? null,
+        })),
+      )
       .onConflictDoUpdate({
         target: schedulledRequests.externalId,
         set: buildConflictUpdateColumns(schedulledRequests, [

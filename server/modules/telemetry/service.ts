@@ -66,7 +66,10 @@ export class TelemetryService {
   static async create(
     record: OTelemetryInsert,
   ): Promise<void> {
-    await db.insert(telemetry).values(record);
+    await db.insert(telemetry).values({
+      ...record,
+      requestHeaders: record.requestHeaders != null ? sql`${JSON.stringify(record.requestHeaders)}::jsonb` : null,
+    });
   }
 
   static async deleteMany(ids: number[]): Promise<void> {
