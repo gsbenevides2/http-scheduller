@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import {
   HttpSchedullerReceived,
   HttpSchedullerToAdd,
@@ -79,12 +80,17 @@ export default function Home() {
           <h1 className="font-bold text-gray-100 text-3xl">Http Schedulers</h1>
           <p className="mt-2 text-gray-400">Gerencie seus agendamentos HTTP</p>
         </div>
-        <button
-          className="text-white btn btn-primary"
-          onClick={() => setIsCreateOpen(true)}
-        >
-          Nova Request
-        </button>
+        <div className="flex gap-2">
+          <Link href="/telemetry" className="text-white btn btn-outline">
+            Telemetria
+          </Link>
+          <button
+            className="text-white btn btn-primary"
+            onClick={() => setIsCreateOpen(true)}
+          >
+            Nova Request
+          </button>
+        </div>
       </div>
 
       <div className="mt-5 overflow-x-auto">

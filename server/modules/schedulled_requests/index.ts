@@ -66,7 +66,7 @@ export const schedulledRequests = new Elysia({
   .post(
     "/execute",
     async ({ body, status }) => {
-      const result = await SchedulledRequests.executeRequest(body);
+      const result = await SchedulledRequests.executeRequest(body, body.externalId);
       return status(StatusMap.OK, result);
     },
     {

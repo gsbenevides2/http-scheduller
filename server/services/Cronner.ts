@@ -92,7 +92,7 @@ export class CronnerService {
       await SchedulledRequests.deleteMany([id]);
     }
 
-    await SchedulledRequests.executeRequest(scheduler);
+    await SchedulledRequests.executeRequest(scheduler, id);
   }
 
   static async gracefulShutdown() {

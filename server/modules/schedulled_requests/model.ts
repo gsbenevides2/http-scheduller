@@ -165,13 +165,16 @@ export const SchedulledRequestsModel = {
           "Before send the request, autenticate in autthentik and send bearer header",
         example: false,
       }),
-  }).omit({
-    createdAt: true,
-    triggerType: true,
-    triggerValue: true,
-    externalId: true,
-    excludeBeforeExecution: true,
-  }),
+  })
+    .omit({
+      createdAt: true,
+      triggerType: true,
+      triggerValue: true,
+      excludeBeforeExecution: true,
+    })
+    .extend({
+      externalId: z.string().optional(),
+    }),
   executeRequestResponse: z
     .object({
       ok: z.boolean().meta({
