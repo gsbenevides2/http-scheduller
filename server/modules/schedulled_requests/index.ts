@@ -39,6 +39,10 @@ export const schedulledRequests = new Elysia({
       return;
     },
     {
+      detail: {
+        summary: "Create or Update Schedulled Requests",
+        description: "Create or update one or more schedulled requests.",
+      },
       body: SchedulledRequestsModel.createOrUpdateSchedulledRequestsBody,
       response: {
         [StatusMap["No Content"]]: z.undefined(),
@@ -66,7 +70,10 @@ export const schedulledRequests = new Elysia({
   .post(
     "/execute",
     async ({ body, status }) => {
-      const result = await SchedulledRequests.executeRequest(body, body.externalId);
+      const result = await SchedulledRequests.executeRequest(
+        body,
+        body.externalId,
+      );
       return status(StatusMap.OK, result);
     },
     {

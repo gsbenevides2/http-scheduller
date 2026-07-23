@@ -173,7 +173,11 @@ export const SchedulledRequestsModel = {
       excludeBeforeExecution: true,
     })
     .extend({
-      externalId: z.string().optional(),
+      externalId: z.uuidv4().optional().meta({
+        title: "External ID",
+        description: "The external ID of the http scheduller",
+        example: crypto.randomUUID(),
+      }),
     }),
   executeRequestResponse: z
     .object({
