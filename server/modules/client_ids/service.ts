@@ -2,12 +2,12 @@ import { db } from "@/server/db";
 import { clientIds } from "@/server/db/schema";
 import { inArray, sql } from "drizzle-orm";
 import {
+  ClientIdsModel,
   CreateOrUpdateClientIdBody,
-  GetClientIdsResponse,
 } from "./model";
 
 export class ClientIdsService {
-  static async getAll(): Promise<GetClientIdsResponse> {
+  static async getAll(): Promise<ClientIdsModel["getClientIdsResponse"]> {
     return db.query.clientIds.findMany();
   }
 

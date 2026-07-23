@@ -1,30 +1,64 @@
+import { clientIds } from "@/server/db/schema";
+import { createSelectSchema, createInsertSchema } from "drizzle-orm/zod";
+import { UnwrapSchema } from "elysia";
 import { z } from "zod";
 
-const createOrUpdateClientIdBody = z.array(
-  z.object({
-    hostname: z.string().min(1),
-    clientId: z.string().min(1),
-  }),
-);
-
-const deleteClientIdsBody = z.array(z.string().min(1));
-
-const getClientIdsResponse = z.array(
-  z.object({
-    hostname: z.string(),
-    clientId: z.string(),
-    createdAt: z.date().nullable(),
-  }),
-);
-
 export const ClientIdsModel = {
-  createOrUpdateClientIdBody,
-  deleteClientIdsBody,
-  getClientIdsResponse,
+  getClientIdsResponse: z.array(
+    createSelectSchema(clientIds, {
+      hostname: () =>
+        z.string().min(1).meta({
+          title: "Hostname",
+          description: "The hostname to map to a client ID",
+          example: "api.example.com",
+        }),
+      clientId: (schema) =>
+        schema.meta({
+          title: "Client ID",
+          description: "The Authentik client ID for this hostname",
+          example: "abc123def456",
+        }),
+      createdAt: (schema) =>
+        schema.meta({
+          title: "Created At",
+          description: "When this mapping was created",
+        }),
+    }),
+  ),
+  createOrUpdateClientIdBody: z.array(
+    createInsertSchema(clientIds, {
+      hostname: () =>
+        z.string().min(1).meta({
+          title: "Hostname",
+          description: "The hostname to map to a client ID",
+          example: "api.example.com",
+        }),
+      clientId: (schema) =>
+        schema.meta({
+          title: "Client ID",
+          description: "The Authentik client ID for this hostname",
+          example: "abc123def456",
+        }),
+    }),
+  ),
+  deleteClientIdsBody: z.array(z.string().min(1)).meta({
+    title: "List of Hostnames",
+    description: "List of hostnames to delete from the client ID mappings",
+    example: ["api.example.com", "auth.example.com"],
+  }),
 };
 
+export type ClientIdsModel = {
+  [k in keyof typeof ClientIdsModel]: UnwrapSchema<
+    (typeof ClientIdsModel)[k]
+  >;
+};
+
+export type ClientIdRecord = typeof clientIds.$inferSelect;
+
 export type CreateOrUpdateClientIdBody = z.infer<
-  typeof createOrUpdateClientIdBody
+  typeof ClientIdsModel.createOrUpdateClientIdBody
 >;
-export type DeleteClientIdsBody = z.infer<typeof deleteClientIdsBody>;
-export type GetClientIdsResponse = z.infer<typeof getClientIdsResponse>;
+export type DeleteClientIdsBody = z.infer<
+  typeof ClientIdsModel.deleteClientIdsBody
+>;
