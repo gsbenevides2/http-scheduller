@@ -89,15 +89,22 @@ export class CronnerService {
   }
 
   static async processJob(id: string, version?: number) {
-    if (version !== undefined) {
-      const currentVersion = CronnerService.jobVersions.get(id);
-      if (currentVersion !== version) {
-        return;
-      }
+    const isCurrentVersion =
+      version === undefined || CronnerService.jobVersions.get(id) === version;
+
+    if (!isCurrentVersion) {
+      return;
     }
 
     const scheduler = await SchedulledRequests.getById(id);
     if (!scheduler) return;
+
+    if (
+      version !== undefined &&
+      CronnerService.jobVersions.get(id) !== version
+    ) {
+      return;
+    }
 
     if (scheduler.excludeBeforeExecution) {
       await CronnerService.removeJob(id);
