@@ -60,6 +60,10 @@ export class CronnerService {
 
     const delay = Math.min(remaining, MAX_TIMEOUT_MS);
     const handle = setTimeout(() => {
+      if (CronnerService.jobVersions.get(jobId) !== version) {
+        return;
+      }
+
       const newRemaining = targetDate.getTime() - Date.now();
 
       if (newRemaining <= 0) {
@@ -109,7 +113,6 @@ export class CronnerService {
     if (scheduler.excludeBeforeExecution) {
       await CronnerService.removeJob(id);
       await SchedulledRequests.deleteMany([id]);
-      return;
     }
 
     await SchedulledRequests.executeRequest(scheduler, id);
