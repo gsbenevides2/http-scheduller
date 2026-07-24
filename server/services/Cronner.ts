@@ -73,11 +73,10 @@ export class CronnerService {
   static async removeJob(id: string) {
     const handle = this.jobs.get(id);
     if (handle) {
-      // CronJob has stop(); timeout has clearTimeout
-      if (typeof (handle as CronJob).stop === "function") {
-        (handle as CronJob).stop();
+      if ("stop" in handle) {
+        handle.stop();
       } else {
-        clearTimeout(handle as ReturnType<typeof setTimeout>);
+        clearTimeout(handle);
       }
       this.jobs.delete(id);
     }
