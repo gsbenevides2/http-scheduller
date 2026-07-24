@@ -1,35 +1,47 @@
-# HTTP Scheduler 📅
+# HTTP Scheduler
 
-Sistema CRUD para agendar a execução de requests HTTP com suporte a cron expressions e datas específicas.
+Sistema CRUD para agendar a execução de requisições HTTP com suporte a cron expressions, datas específicas, telemetria e integração com Authentik SSO.
 
-## 🚀 Tecnologias
+## Tecnologias
 
-- **[Next.js 16](https://nextjs.org/)** - Framework React com App Router
+- **[Next.js 16](https://nextjs.org/)** - Framework React com App Router e output standalone
 - **[Bun](https://bun.sh/)** - Runtime JavaScript ultra-rápido
 - **[ElysiaJS](https://elysiajs.com/)** - Framework backend minimalista e type-safe
-- **[MongoDB](https://www.mongodb.com/)** - Banco de dados NoSQL
+- **[Drizzle ORM](https://orm.drizzle.team/)** - ORM type-safe para PostgreSQL
+- **[PostgreSQL](https://www.postgresql.org/)** - Banco de dados relacional
+- **[Redis](https://redis.io/)** - Cache para tokens de autenticação
 - **[TypeScript](https://www.typescriptlang.org/)** - Tipagem estática
-- **[TailwindCSS](https://tailwindcss.com/)** + **[DaisyUI](https://daisyui.com/)** - Estilização
+- **[TailwindCSS v4](https://tailwindcss.com/)** + **[DaisyUI v5](https://daisyui.com/)** - Estilização
 - **[Eden Treaty](https://elysiajs.com/eden/treaty/overview.html)** - Cliente type-safe para APIs Elysia
+- **[TanStack React Query](https://tanstack.com/query)** - Gerenciamento de estado assíncrono
+- **[Zod](https://zod.dev/)** - Validação de schemas
+- **[jose](https://github.com/panva/jose)** - Assinatura e verificação de JWT
+- **[Authentik](https://goauthentik.io/)** - Integração SSO via OAuth2 client_credentials
 
-## ✨ Funcionalidades
+## Funcionalidades
 
-- ✅ **Criar agendamentos HTTP** com diferentes métodos (GET, POST, PUT, DELETE, PATCH)
-- ✅ **Agendar por cron expression** ou **data específica**
-- ✅ **Visualizar todos os agendamentos** em uma interface intuitiva
-- ✅ **Ver detalhes completos** de cada agendamento (headers, body, etc.)
-- ✅ **Excluir agendamentos** com confirmação
-- ✅ **Execução automática** baseada no trigger configurado
-- ✅ **API REST com OpenAPI/Swagger** integrado
-- ✅ **Opção de exclusão automática** após execução
+- Criar agendamentos HTTP com diferentes métodos (GET, POST, PUT, DELETE, PATCH)
+- Agendar por cron expression ou data específica
+- Visualizar todos os agendamentos em uma interface intuitiva
+- Ver detalhes completos de cada agendamento (headers, body, etc.)
+- Excluir agendamentos com confirmação
+- Execução automática baseada no trigger configurado
+- Botão de teste para executar um agendamento imediatamente e ver o resultado
+- Integração opcional com Authentik SSO (client_credentials por hostname)
+- Gerenciamento de Client IDs para mapear hostnames a client IDs do Authentik
+- Dashboard de telemetria com histórico de execuções, filtros e estatísticas
+- Cache de tokens de autenticação via Redis
+- Exclusão automática após execução (configurável)
+- API REST com documentação OpenAPI/Scalar integrada
+- CI/CD com GitHub Actions (build, review por IA, release + deploy via Coolify)
 
-## 📋 Pré-requisitos
+## Pré-requisitos
 
 - [Bun](https://bun.sh/) >= 1.0
-- [MongoDB](https://www.mongodb.com/) em execução
-- Node.js (opcional, para compatibilidade)
+- [PostgreSQL](https://www.postgresql.org/) em execução
+- [Redis](https://redis.io/) (opcional, necessário para cache de tokens Authentik)
 
-## 🔧 Instalação
+## Instalação
 
 1. Clone o repositório:
 
@@ -47,17 +59,32 @@ bun install
 3. Configure as variáveis de ambiente:
 
 ```bash
-cp .env.example .env
+cp .env.local .env.local
 ```
 
-Edite o arquivo `.env` com suas configurações:
+Edite o arquivo `.env.local` com suas configurações:
 
 ```env
-MONGO_URI=mongodb://localhost:27017
-NEXT_SERVER_ACTIONS_ENCRYPTION_KEY=sua-chave-secreta-aqui
+DATABASE_URL=postgresql://usuario:senha@localhost:5432/http-scheduller
+PORT=3000
+TZ=America/Sao_Paulo
+
+# Opcional: Authentik SSO
+AUTHENTIK_USERNAME=http-scheduller-service-account
+AUTHENTIK_PASSWORD=sua-senha
+AUTHENTIK_URL=https://sso.seudominio.com
+
+# Opcional: Redis Cache
+REDIS_CACHE_URL=redis://localhost:6379
 ```
 
-4. Execute o servidor de desenvolvimento:
+4. Sincronize o schema do banco de dados:
+
+```bash
+bun run db:sync
+```
+
+5. Execute o servidor de desenvolvimento:
 
 ```bash
 bun run dev
@@ -65,18 +92,18 @@ bun run dev
 
 O aplicativo estará disponível em [http://localhost:3000](http://localhost:3000)
 
-## 🐳 Docker
+## Docker
 
 Para executar com Docker:
 
 ```bash
 docker build -t http-scheduler .
 docker run -p 3000:3000 \
-  -e MONGO_URI=mongodb://host.docker.internal:27017 \
+  -e DATABASE_URL=postgresql://usuario:senha@host.docker.internal:5432/http-scheduller \
   http-scheduler
 ```
 
-## 📖 Uso
+## Uso
 
 ### Interface Web
 
@@ -84,94 +111,144 @@ Acesse `http://localhost:3000` para gerenciar seus agendamentos:
 
 - **Visualizar**: Lista todos os agendamentos na tabela principal
 - **Detalhes**: Clique em qualquer linha para ver todos os campos
-- **Excluir**: Use o botão vermelho "Excluir" e confirme a ação
+- **Testar**: Execute um agendamento imediatamente e veja o resultado
+- **Excluir**: Use o botão de exclusão e confirme a ação
+- **Telemetria**: Acesse `/telemetry` para ver o histórico de execuções com filtros e estatísticas
+- **Client IDs**: Acesse `/client-ids` para gerenciar mapeamentos hostname → client ID do Authentik
 
 ### API REST
 
-A documentação Swagger está disponível em:
+A documentação OpenAPI está disponível via Scalar UI em:
 
 ```
-http://localhost:3000/api/swagger
+http://localhost:3000/api/scalar
 ```
 
 #### Endpoints principais:
 
-**GET /api/http-scheduller**
+**Schedulled Requests**
 
-```bash
-curl http://localhost:3000/api/http-scheduller
-```
+| Método | Rota | Descrição |
+|--------|------|-----------|
+| GET | `/api/schedulled_requests` | Listar agendamentos |
+| POST | `/api/schedulled_requests` | Criar agendamentos |
+| DELETE | `/api/schedulled_requests` | Excluir agendamentos |
+| POST | `/api/schedulled_requests/execute` | Executar um agendamento |
 
-**POST /api/http-scheduller**
+**Telemetry**
 
-```bash
-curl -X POST http://localhost:3000/api/http-scheduller \
-  -H "Content-Type: application/json" \
-  -d '[{
-    "externalId": "my-task-1",
-    "triggerType": "cron",
-    "triggerValue": "0 0 * * *",
-    "url": "https://api.example.com/webhook",
-    "method": "POST",
-    "headers": {
-      "Content-Type": "application/json",
-      "Authorization": "Bearer token"
-    },
-    "body": "{\"message\": \"Hello\"}",
-    "excludeBeforeExecution": false
-  }]'
-```
+| Método | Rota | Descrição |
+|--------|------|-----------|
+| GET | `/api/telemetry` | Listar execuções (com paginação) |
+| GET | `/api/telemetry/stats` | Estatísticas de execuções |
+| DELETE | `/api/telemetry` | Excluir registros |
+| DELETE | `/api/telemetry/clear` | Limpar toda a telemetria |
 
-**DELETE /api/http-scheduller**
+**Client IDs**
 
-```bash
-curl -X DELETE http://localhost:3000/api/http-scheduller \
-  -H "Content-Type: application/json" \
-  -d '["my-task-1"]'
-```
+| Método | Rota | Descrição |
+|--------|------|-----------|
+| GET | `/api/client_ids` | Listar client IDs |
+| POST | `/api/client_ids` | Criar client ID |
+| DELETE | `/api/client_ids` | Excluir client IDs |
 
-## 🗂️ Estrutura do Projeto
+## Estrutura do Projeto
 
 ```
 app/
 ├── api/
-│   └── [[...slugs]]/
-│       ├── route.ts           # Handler Next.js para API
-│       ├── HttpScheduller.ts  # Controller ElysiaJS
-│       └── eden.ts           # Cliente Eden Treaty
+│   ├── [[...slugs]]/route.ts      # Catch-all route para Elysia
+│   ├── clientSide.ts              # Cliente Eden Treaty (browser)
+│   └── serverSide.ts              # Cliente Eden Treaty (server-side)
 ├── components/
-│   ├── SchedulerDetailsModal.tsx      # Modal de detalhes
-│   └── DeleteConfirmationModal.tsx    # Modal de confirmação
+│   ├── ClientIdFormModal.tsx       # Modal de formulário de client IDs
+│   ├── DeleteConfirmationModal.tsx # Modal de confirmação de exclusão
+│   ├── SchedulerDetailsModal.tsx   # Modal de detalhes + teste
+│   └── SchedulerFormModal.tsx      # Modal de formulário de agendamentos
 ├── hooks/
-│   └── useSchedullers.ts     # Hook para gerenciar schedulers
-├── services/
-│   ├── HttpScheduller.ts     # Serviço MongoDB
-│   └── Cronner.ts           # Serviço de agendamento
+│   ├── useClientIdsQuery.ts        # Hook React Query para client IDs
+│   ├── useSchedulersQuery.ts       # Hook React Query para agendamentos
+│   └── useTelemetryQuery.ts        # Hook React Query para telemetria
+├── client-ids/page.tsx            # Página de gerenciamento de client IDs
+├── telemetry/page.tsx             # Dashboard de telemetria
 ├── utils/
 │   ├── formatTriggerValue.ts
 │   ├── getEnv.ts
 │   └── getProjectInfo.ts
 ├── layout.tsx
-├── page.tsx                  # Página principal
+├── page.tsx                       # Página principal
+├── providers.tsx                  # QueryClientProvider
 └── globals.scss
+
+server/
+├── db/
+│   ├── drizzle.config.ts          # Configuração Drizzle Kit
+│   ├── index.ts                   # Inicialização Drizzle ORM
+│   └── schema.ts                  # Schema do banco (3 tabelas + enums)
+├── modules/
+│   ├── authentik/index.ts         # Login OAuth2 client_credentials
+│   ├── client_ids/                # Rotas + serviço de client IDs
+│   ├── schedulled_requests/       # Rotas + serviço de agendamentos
+│   └── telemetry/                 # Rotas + serviço de telemetria
+├── services/
+│   └── Cronner.ts                 # Serviço de agendamento (Bun.cron + setTimeout)
+├── utils/
+│   ├── buildConflictUpdateColumns.ts  # Helper upsert Drizzle
+│   ├── cacheClient.ts             # Cliente Redis cache
+│   └── httpMethods.ts             # Métodos HTTP permitidos
+├── index.ts                       # App Elysia (prefix: /api)
+└── openapi.ts                     # Configuração OpenAPI + Scalar
 ```
 
-## 🔑 Modelo de Dados
+## Modelo de Dados
+
+### schedulled_requests
 
 ```typescript
 interface HttpScheduler {
-  externalId: string; // ID único
-  triggerType: "cron" | "date"; // Tipo de trigger
-  triggerValue: string; // Cron expression ou ISO date
-  url: string; // URL do request
+  externalId: string;               // ID único (UUID auto-gerado)
+  triggerType: "date" | "cron";    // Tipo de trigger
+  triggerValue: string;             // Cron expression ou ISO date
+  url: string;                      // URL do request
   method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
-  headers: Record<string, string>; // Headers customizados
-  body: string; // Body do request
-  excludeBeforeExecution: boolean; // Excluir após executar
+  headers: Record<string, string>;  // Headers customizados
+  body: string | null;              // Body do request
+  excludeBeforeExecution: boolean;  // Excluir após executar
+  useAuthentikServiceAccount: boolean; // Usar Authentik para autenticação
+  createdAt: Date;
 }
 ```
 
-### Exemplos de Trigger Value:
+### telemetry
+
+```typescript
+interface Telemetry {
+  id: number;
+  schedulerExternalId: string | null;
+  requestUrl: string;
+  requestMethod: string;
+  requestHeaders: Record<string, string>;
+  requestBody: string | null;
+  responseBody: string | null;
+  responseStatus: number | null;
+  responseTimeMs: number | null;
+  errorMessage: string | null;
+  success: boolean;
+  executedAt: Date;
+}
+```
+
+### client_ids
+
+```typescript
+interface ClientId {
+  hostname: string;    // Hostname (PK)
+  clientId: string;    // Client ID do Authentik
+  createdAt: Date;
+}
+```
+
+### Exemplos de Trigger Value
 
 **Cron expressions:**
 
@@ -183,27 +260,37 @@ interface HttpScheduler {
 
 - `2026-12-31T23:59:59Z` - Data e hora em ISO 8601
 
-## 🛠️ Scripts Disponíveis
+## Scripts Disponíveis
 
 ```bash
-bun run dev      # Servidor de desenvolvimento
-bun run build    # Build de produção
-bun run start    # Servidor de produção
-bun run lint     # Linter ESLint
+bun run dev        # Servidor de desenvolvimento
+bun run build      # Build de produção
+bun run start      # Servidor de produção
+bun run lint       # Linter ESLint
+bun run db:sync    # Sincronizar schema do banco com Drizzle
+bun run db:studio  # Abrir Drizzle Studio (GUI do banco)
 ```
 
-## 📝 Licença
+## CI/CD
+
+O projeto utiliza GitHub Actions com os seguintes workflows:
+
+- **PR Build** (`pr-build.yml`): Verifica build e lint em pull requests
+- **PR Agent Review** (`pr-agent-review.yml`): Review automatizada por IA
+- **Release** (`release.yml`): Build Docker, push para registry e deploy via Coolify
+
+## Licença
 
 MIT License - veja [LICENSE](LICENSE) para mais detalhes.
 
-## 👤 Autor
+## Autor
 
 **Guilherme da Silva Benevides**
 
 - Email: git@gui.dev.br
 - GitHub: [@gsbenevides2](https://github.com/gsbenevides2)
 
-## 🤝 Contribuindo
+## Contribuindo
 
 Contribuições são bem-vindas! Sinta-se à vontade para abrir issues ou pull requests.
 

@@ -1,21 +1,11 @@
 import type { CronJob } from "bun";
-import { HttpSchedullerService } from "./HttpScheduller";
+import { SchedulledRequests } from "../modules/schedulled_requests/service";
 
-interface CronnerJobBase {
+interface CronnerJob {
   id: string;
   triggerType: "cron" | "date";
   triggerValue: string;
 }
-
-type CronnerJob =
-  | (CronnerJobBase & {
-      triggerType: "cron";
-      triggerValue: string; // cron expression
-    })
-  | (CronnerJobBase & {
-      triggerType: "date";
-      triggerValue: string; // ISO date or date string parseable by Date
-    });
 
 type JobHandle = CronJob | ReturnType<typeof setTimeout>;
 
@@ -25,7 +15,7 @@ const MAX_TIMEOUT_MS = 2_147_483_647;
 export class CronnerService {
   static jobs = new Map<string, JobHandle>();
 
-  static async addJob(job: CronnerJob) {
+  static async upsertJob(job: CronnerJob) {
     if (CronnerService.checkJobExists(job.id)) {
       await CronnerService.removeJob(job.id);
     }
@@ -94,19 +84,15 @@ export class CronnerService {
   }
 
   static async processJob(id: string) {
-    const scheduler = await HttpSchedullerService.getById(id);
+    const scheduler = await SchedulledRequests.getById(id);
     if (!scheduler) return;
 
     if (scheduler.excludeBeforeExecution) {
       await CronnerService.removeJob(id);
-      await HttpSchedullerService.deleteById(id);
+      await SchedulledRequests.deleteMany([id]);
     }
 
-    await fetch(scheduler.url, {
-      method: scheduler.method,
-      headers: scheduler.headers,
-      body: scheduler.body,
-    });
+    await SchedulledRequests.executeRequest(scheduler, id);
   }
 
   static async gracefulShutdown() {
@@ -121,13 +107,23 @@ export class CronnerService {
   }
 
   static async gracefulStart() {
-    const schedullers = await HttpSchedullerService.getAll();
+    const schedullers = await SchedulledRequests.getAll();
     for (const scheduler of schedullers) {
-      await CronnerService.addJob({
+      await CronnerService.upsertJob({
         id: scheduler.externalId,
         triggerType: scheduler.triggerType,
         triggerValue: scheduler.triggerValue,
       });
     }
+  }
+
+  static async upsertManyJobs(jobs: CronnerJob[]) {
+    for (const job of jobs) {
+      await this.upsertJob(job);
+    }
+  }
+
+  static async removeManyJobs(ids: string[]) {
+    await Promise.all(ids.map((i) => this.removeJob(i)));
   }
 }

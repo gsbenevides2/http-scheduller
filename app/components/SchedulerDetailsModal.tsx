@@ -1,14 +1,19 @@
 import { useMemo, useState } from "react";
-import { HttpScheduller } from "../services/HttpScheduller";
 import { formatTriggerValue } from "../utils/formatTriggerValue";
 import SchedulerFormModal from "./SchedulerFormModal";
-import { SchedulerTestResult } from "../types/SchedulerTestResult";
+import {
+  HttpSchedulledExecuteResult,
+  HttpSchedullerToAdd,
+  HttpSchedullerToTest,
+} from "../hooks/useSchedulersQuery";
 
 interface SchedulerDetailsModalProps {
-  scheduler: HttpScheduller | null;
+  scheduler: HttpSchedullerToAdd | null;
   onClose: () => void;
-  onUpsert: (scheduler: HttpScheduller) => Promise<void>;
-  onTest: (scheduler: HttpScheduller) => Promise<SchedulerTestResult>;
+  onUpsert: (scheduler: HttpSchedullerToAdd) => Promise<void>;
+  onTest: (
+    scheduler: HttpSchedullerToTest,
+  ) => Promise<HttpSchedulledExecuteResult>;
 }
 
 export default function SchedulerDetailsModal({
@@ -20,9 +25,8 @@ export default function SchedulerDetailsModal({
   const [editOpen, setEditOpen] = useState(false);
 
   const [testing, setTesting] = useState(false);
-  const [testResult, setTestResult] = useState<SchedulerTestResult | null>(
-    null,
-  );
+  const [testResult, setTestResult] =
+    useState<HttpSchedulledExecuteResult | null>(null);
   const [testError, setTestError] = useState<string | null>(null);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
