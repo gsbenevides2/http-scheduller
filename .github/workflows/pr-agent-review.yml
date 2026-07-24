@@ -23,6 +23,7 @@ jobs:
           config.model: "openrouter/xiaomi/mimo-v2.5"
           OPENROUTER.KEY: ${{ secrets.OPENROUTER_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.TOKEN_GITHUB }}
+          CONFIG__RESPONSE_LANGUAGE: "pt-BR"
           github_action_config.auto_review: "true"
           github_action_config.auto_describe: "true"
           github_action_config.auto_improve: "true"
