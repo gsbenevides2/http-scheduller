@@ -6,7 +6,7 @@ set -euo pipefail
 # =========================
 
 REGISTRY="ghcr.io"
-PACKAGE_NAME="@gsbenevides2/http-scheduller-types"
+PACKAGE_NAME="@gsbenevides2/http-scheduller"
 
 echo "==> Preparing types package for publish..."
 echo "    Registry: ${REGISTRY}"
@@ -20,16 +20,8 @@ cat > .npmrc <<EOF
 always-auth=true
 EOF
 
-echo "==> Bumping package version to ${VERSION}..."
-# Update version in packages/types/package.json using jq
-tmp=$(mktemp)
-jq --arg v "${VERSION}" '.version = $v' packages/types/package.json > "${tmp}"
-mv "${tmp}" packages/types/package.json
-
 echo "==> Building types package..."
-cd packages/types
-rm -rf dist
-bun run build
+bun run tsc -p tsconfig.build.json
 
 echo "==> Publishing package to ${REGISTRY}..."
 npm publish --registry "https://${REGISTRY}" --access public
