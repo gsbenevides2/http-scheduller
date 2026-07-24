@@ -20,6 +20,11 @@ cat > .npmrc <<EOF
 always-auth=true
 EOF
 
+echo "==> Change Package JSON"
+tmp=$(mktemp)
+jq --arg package_name "${PACKAGE_NAME}" '.name = $package_name' package.json > "${tmp}"
+mv "${tmp}" package.json
+
 echo "==> Building types package..."
 bun run tsc -p tsconfig.build.json
 

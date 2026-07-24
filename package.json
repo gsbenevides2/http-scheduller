@@ -3,9 +3,15 @@
   "displayName": "HTTP Scheduller",
   "description": "Sistema CRUD para agendar a execução de requisições HTTP",
   "type": "module",
-  "version": "1.0.13",
+  "version": "1.0.14",
   "private": false,
   "license": "MIT",
+  "types": "./dist/server/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/server/index.d.ts"
+    }
+  },
   "author": {
     "name": "Guilherme da Silva Benevides",
     "email": "git@gui.dev.br",
