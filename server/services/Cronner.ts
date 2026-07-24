@@ -14,15 +14,21 @@ const MAX_TIMEOUT_MS = 2_147_483_647;
 
 export class CronnerService {
   static jobs = new Map<string, JobHandle>();
+  static jobVersions = new Map<string, number>();
 
   static async upsertJob(job: CronnerJob) {
     if (CronnerService.checkJobExists(job.id)) {
       await CronnerService.removeJob(job.id);
     }
 
+    const currentVersion = CronnerService.jobVersions.get(job.id) ?? 0;
+    const newVersion = currentVersion + 1;
+    CronnerService.jobVersions.set(job.id, newVersion);
+
     if (job.triggerType === "cron") {
+      const version = newVersion;
       const handle = Bun.cron(job.triggerValue, async () => {
-        await CronnerService.processJob(job.id);
+        await CronnerService.processJob(job.id, version);
       });
       this.jobs.set(job.id, handle);
       return;
@@ -37,29 +43,29 @@ export class CronnerService {
       return;
     }
 
-    CronnerService.scheduleTimeout(job.id, targetDate);
+    CronnerService.scheduleTimeout(job.id, targetDate, newVersion);
   }
 
-  private static scheduleTimeout(jobId: string, targetDate: Date) {
+  private static scheduleTimeout(
+    jobId: string,
+    targetDate: Date,
+    version: number,
+  ) {
     const remaining = targetDate.getTime() - Date.now();
 
     if (remaining <= 0) {
-      // Target time has passed, execute immediately
-      CronnerService.processJob(jobId);
+      CronnerService.processJob(jobId, version);
       return;
     }
 
-    // Schedule timeout with safe delay (chunk if necessary)
     const delay = Math.min(remaining, MAX_TIMEOUT_MS);
     const handle = setTimeout(() => {
       const newRemaining = targetDate.getTime() - Date.now();
 
       if (newRemaining <= 0) {
-        // Time to execute
-        CronnerService.processJob(jobId);
+        CronnerService.processJob(jobId, version);
       } else {
-        // Reschedule for remaining time
-        CronnerService.scheduleTimeout(jobId, targetDate);
+        CronnerService.scheduleTimeout(jobId, targetDate, version);
       }
     }, delay);
 
@@ -82,13 +88,21 @@ export class CronnerService {
     }
   }
 
-  static async processJob(id: string) {
+  static async processJob(id: string, version?: number) {
+    if (version !== undefined) {
+      const currentVersion = CronnerService.jobVersions.get(id);
+      if (currentVersion !== version) {
+        return;
+      }
+    }
+
     const scheduler = await SchedulledRequests.getById(id);
     if (!scheduler) return;
 
     if (scheduler.excludeBeforeExecution) {
       await CronnerService.removeJob(id);
       await SchedulledRequests.deleteMany([id]);
+      return;
     }
 
     await SchedulledRequests.executeRequest(scheduler, id);
@@ -103,6 +117,7 @@ export class CronnerService {
       }
       this.jobs.delete(id);
     }
+    this.jobVersions.clear();
   }
 
   static async gracefulStart() {
