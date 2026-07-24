@@ -19,6 +19,7 @@ export const schedulledRequests = pgTable("schedulled_requests", {
   externalId: text()
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
+  name: text(),
   triggerType: triggerTypeEnum().notNull(),
   excludeBeforeExecution: boolean().notNull().default(false),
   triggerValue: text().notNull(),
@@ -35,6 +36,7 @@ export const schedulledRequests = pgTable("schedulled_requests", {
 export const telemetry = pgTable("telemetry", {
   id: serial().primaryKey(),
   schedulerExternalId: text(),
+  requestName: text(),
   requestUrl: text().notNull(),
   requestMethod: text().notNull(),
   requestHeaders: json().$type<Record<string, string>>(),

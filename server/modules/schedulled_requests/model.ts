@@ -12,6 +12,12 @@ export const SchedulledRequestsModel = {
           description: "The external ID of the http scheduller",
           example: crypto.randomUUID(),
         }),
+      name: (schema) =>
+        schema.meta({
+          title: "Name",
+          description: "The name of the http scheduller",
+          example: "Health Check",
+        }),
       triggerType: (schema) =>
         schema.meta({
           title: "Trigger Type",
@@ -73,6 +79,12 @@ export const SchedulledRequestsModel = {
           description: "The external ID of the http scheduller",
           example: crypto.randomUUID(),
         }),
+      name: (schema) =>
+        schema.meta({
+          title: "Name",
+          description: "The name of the http scheduller",
+          example: "Health Check",
+        }),
       triggerType: (schema) =>
         schema.meta({
           title: "Trigger Type",
@@ -132,6 +144,12 @@ export const SchedulledRequestsModel = {
     example: [crypto.randomUUID(), crypto.randomUUID()],
   }),
   executeRequestBody: createSelectSchema(schedulledRequests, {
+    name: (schema) =>
+      schema.meta({
+        title: "Name",
+        description: "The name of the http scheduller",
+        example: "Health Check",
+      }),
     url: () =>
       z.url().meta({
         title: "URL",

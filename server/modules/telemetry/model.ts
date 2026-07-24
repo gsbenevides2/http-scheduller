@@ -19,6 +19,12 @@ export const TelemetryModel = {
             description: "The external ID of the scheduler that triggered this request",
             example: crypto.randomUUID(),
           }),
+        requestName: (schema) =>
+          schema.meta({
+            title: "Request Name",
+            description: "The name given to the scheduled request",
+            example: "Health Check",
+          }),
         requestUrl: (schema) =>
           schema.meta({
             title: "Request URL",

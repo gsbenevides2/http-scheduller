@@ -65,6 +65,10 @@ export default function SchedulerDetailsModal({
 
           <div className="space-y-3">
             <div>
+              <label className="font-semibold text-gray-400">Nome:</label>
+              <p className="text-gray-200">{details.name || "(sem nome)"}</p>
+            </div>
+            <div>
               <label className="font-semibold text-gray-400">
                 External ID:
               </label>
