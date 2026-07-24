@@ -1,0 +1,26 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "declaration": true,
+    "declarationMap": false,
+    "sourceMap": false,
+    "noEmit": false,
+    "emitDeclarationOnly": true,
+    "rootDir": "../..",
+    "skipLibCheck": true,
+    "incremental": false
+  },
+  "include": [
+    "src/**/*",
+    "../../server/**/*",
+    "../../app/utils/**/*",
+    "../../package.json"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "../../server/db/drizzle.config.ts",
+    "../../**/*.test.ts"
+  ]
+}

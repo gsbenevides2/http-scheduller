@@ -155,50 +155,44 @@ http://localhost:3000/api/scalar
 ## Estrutura do Projeto
 
 ```
-app/
-├── api/
-│   ├── [[...slugs]]/route.ts      # Catch-all route para Elysia
-│   ├── clientSide.ts              # Cliente Eden Treaty (browser)
-│   └── serverSide.ts              # Cliente Eden Treaty (server-side)
-├── components/
-│   ├── ClientIdFormModal.tsx       # Modal de formulário de client IDs
-│   ├── DeleteConfirmationModal.tsx # Modal de confirmação de exclusão
-│   ├── SchedulerDetailsModal.tsx   # Modal de detalhes + teste
-│   └── SchedulerFormModal.tsx      # Modal de formulário de agendamentos
-├── hooks/
-│   ├── useClientIdsQuery.ts        # Hook React Query para client IDs
-│   ├── useSchedulersQuery.ts       # Hook React Query para agendamentos
-│   └── useTelemetryQuery.ts        # Hook React Query para telemetria
-├── client-ids/page.tsx            # Página de gerenciamento de client IDs
-├── telemetry/page.tsx             # Dashboard de telemetria
-├── utils/
-│   ├── formatTriggerValue.ts
-│   ├── getEnv.ts
-│   └── getProjectInfo.ts
-├── layout.tsx
-├── page.tsx                       # Página principal
-├── providers.tsx                  # QueryClientProvider
-└── globals.scss
-
-server/
-├── db/
-│   ├── drizzle.config.ts          # Configuração Drizzle Kit
-│   ├── index.ts                   # Inicialização Drizzle ORM
-│   └── schema.ts                  # Schema do banco (3 tabelas + enums)
-├── modules/
-│   ├── authentik/index.ts         # Login OAuth2 client_credentials
-│   ├── client_ids/                # Rotas + serviço de client IDs
-│   ├── schedulled_requests/       # Rotas + serviço de agendamentos
-│   └── telemetry/                 # Rotas + serviço de telemetria
-├── services/
-│   └── Cronner.ts                 # Serviço de agendamento (Bun.cron + setTimeout)
-├── utils/
-│   ├── buildConflictUpdateColumns.ts  # Helper upsert Drizzle
-│   ├── cacheClient.ts             # Cliente Redis cache
-│   └── httpMethods.ts             # Métodos HTTP permitidos
-├── index.ts                       # App Elysia (prefix: /api)
-└── openapi.ts                     # Configuração OpenAPI + Scalar
+http-scheduller/
+├── app/                              # Frontend Next.js
+├── server/                           # Backend Elysia
+├── packages/
+│   └── types/                        # Pacote de tipos da API
+│       ├── src/index.ts              # Re-exporta o tipo App
+│       ├── package.json              # Configuração do pacote
+│       └── dist/                     # Declaration files gerados
+└── .github/workflows/               # CI/CD
 ```
+
+### Pacote de Tipos (@gsbenevides2/http-scheduller-types)
+
+O projeto publica um pacote npm no GitHub Container Registry (ghcr.io) com os tipos da API Elysia, permitindo consumo type-safe via Eden Treaty em outros projetos.
+
+#### Instalação
+
+```bash
+# npm
+npm install @gsbenevides2/http-scheduller-types@latest
+
+# bun
+bun add @gsbenevides2/http-scheduller-types@latest
+```
+
+#### Uso com Eden Treaty
+
+```typescript
+import { treaty } from '@elysia/eden'
+import type { App } from '@gsbenevides2/http-scheduller-types'
+
+const client = treaty<App>('http://localhost:3000')
+
+// Type-safe: autocomplete, erros em compile-time
+const { data } = await client.api.schedulled_requests.get()
+```
+
+> **Nota**: O consumidor precisa ter `elysia` como peer dependency (>=1.0.0).
 
 ## Modelo de Dados
 
@@ -277,7 +271,10 @@ O projeto utiliza GitHub Actions com os seguintes workflows:
 
 - **PR Build** (`pr-build.yml`): Verifica build e lint em pull requests
 - **PR Agent Review** (`pr-agent-review.yml`): Review automatizada por IA
-- **Release** (`release.yml`): Build Docker, push para registry e deploy via Coolify
+- **Release** (`release.yml`):
+  - Build e push da imagem Docker para ghcr.io
+  - Publicação do pacote de tipos `@gsbenevides2/http-scheduller-types` no ghcr.io
+  - Deploy via Coolify
 
 ## Licença
 

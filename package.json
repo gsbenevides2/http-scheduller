@@ -3,8 +3,11 @@
   "displayName": "HTTP Scheduller",
   "description": "Sistema CRUD para agendar a execução de requisições HTTP",
   "type": "module",
-  "version": "1.0.10",
+  "version": "1.0.11",
   "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
   "license": "MIT",
   "author": {
     "name": "Guilherme da Silva Benevides",

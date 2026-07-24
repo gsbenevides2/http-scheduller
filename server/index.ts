@@ -9,3 +9,5 @@ export const app = new Elysia({ prefix: "/api" })
   .use(schedulledRequests)
   .use(telemetryRoutes)
   .use(clientIds);
+
+export type App = typeof app;
