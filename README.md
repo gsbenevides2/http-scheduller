@@ -128,28 +128,28 @@ http://localhost:3000/api/scalar
 
 **Schedulled Requests**
 
-| Método | Rota | Descrição |
-|--------|------|-----------|
-| GET | `/api/schedulled_requests` | Listar agendamentos |
-| POST | `/api/schedulled_requests` | Criar agendamentos |
-| DELETE | `/api/schedulled_requests` | Excluir agendamentos |
-| POST | `/api/schedulled_requests/execute` | Executar um agendamento |
+| Método | Rota                               | Descrição               |
+| ------ | ---------------------------------- | ----------------------- |
+| GET    | `/api/schedulled_requests`         | Listar agendamentos     |
+| POST   | `/api/schedulled_requests`         | Criar agendamentos      |
+| DELETE | `/api/schedulled_requests`         | Excluir agendamentos    |
+| POST   | `/api/schedulled_requests/execute` | Executar um agendamento |
 
 **Telemetry**
 
-| Método | Rota | Descrição |
-|--------|------|-----------|
-| GET | `/api/telemetry` | Listar execuções (com paginação) |
-| GET | `/api/telemetry/stats` | Estatísticas de execuções |
-| DELETE | `/api/telemetry` | Excluir registros |
-| DELETE | `/api/telemetry/clear` | Limpar toda a telemetria |
+| Método | Rota                   | Descrição                        |
+| ------ | ---------------------- | -------------------------------- |
+| GET    | `/api/telemetry`       | Listar execuções (com paginação) |
+| GET    | `/api/telemetry/stats` | Estatísticas de execuções        |
+| DELETE | `/api/telemetry`       | Excluir registros                |
+| DELETE | `/api/telemetry/clear` | Limpar toda a telemetria         |
 
 **Client IDs**
 
-| Método | Rota | Descrição |
-|--------|------|-----------|
-| GET | `/api/client_ids` | Listar client IDs |
-| POST | `/api/client_ids` | Criar client ID |
+| Método | Rota              | Descrição          |
+| ------ | ----------------- | ------------------ |
+| GET    | `/api/client_ids` | Listar client IDs  |
+| POST   | `/api/client_ids` | Criar client ID    |
 | DELETE | `/api/client_ids` | Excluir client IDs |
 
 ## Estrutura do Projeto
@@ -166,30 +166,30 @@ http-scheduller/
 └── .github/workflows/               # CI/CD
 ```
 
-### Pacote de Tipos (@gsbenevides2/http-scheduller-types)
+### Pacote de Tipos (@gsbenevides2/http-scheduller)
 
-O projeto publica um pacote npm no GitHub Container Registry (ghcr.io) com os tipos da API Elysia, permitindo consumo type-safe via Eden Treaty em outros projetos.
+O projeto publica um pacote npm no GitHub Container Registry (npm.pkg.github.com) com os tipos da API Elysia, permitindo consumo type-safe via Eden Treaty em outros projetos.
 
 #### Instalação
 
 ```bash
 # npm
-npm install @gsbenevides2/http-scheduller-types@latest
+npm install @gsbenevides2/http-scheduller@latest
 
 # bun
-bun add @gsbenevides2/http-scheduller-types@latest
+bun add @gsbenevides2/http-scheduller@latest
 ```
 
 #### Uso com Eden Treaty
 
 ```typescript
-import { treaty } from '@elysia/eden'
-import type { App } from '@gsbenevides2/http-scheduller-types'
+import { treaty } from "@elysia/eden";
+import type { App } from "@gsbenevides2/http-scheduller";
 
-const client = treaty<App>('http://localhost:3000')
+const client = treaty<App>("http://localhost:3000");
 
 // Type-safe: autocomplete, erros em compile-time
-const { data } = await client.api.schedulled_requests.get()
+const { data } = await client.api.schedulled_requests.get();
 ```
 
 > **Nota**: O consumidor precisa ter `elysia` como peer dependency (>=1.0.0).
@@ -200,14 +200,14 @@ const { data } = await client.api.schedulled_requests.get()
 
 ```typescript
 interface HttpScheduler {
-  externalId: string;               // ID único (UUID auto-gerado)
-  triggerType: "date" | "cron";    // Tipo de trigger
-  triggerValue: string;             // Cron expression ou ISO date
-  url: string;                      // URL do request
+  externalId: string; // ID único (UUID auto-gerado)
+  triggerType: "date" | "cron"; // Tipo de trigger
+  triggerValue: string; // Cron expression ou ISO date
+  url: string; // URL do request
   method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH";
-  headers: Record<string, string>;  // Headers customizados
-  body: string | null;              // Body do request
-  excludeBeforeExecution: boolean;  // Excluir após executar
+  headers: Record<string, string>; // Headers customizados
+  body: string | null; // Body do request
+  excludeBeforeExecution: boolean; // Excluir após executar
   useAuthentikServiceAccount: boolean; // Usar Authentik para autenticação
   createdAt: Date;
 }
@@ -236,8 +236,8 @@ interface Telemetry {
 
 ```typescript
 interface ClientId {
-  hostname: string;    // Hostname (PK)
-  clientId: string;    // Client ID do Authentik
+  hostname: string; // Hostname (PK)
+  clientId: string; // Client ID do Authentik
   createdAt: Date;
 }
 ```
