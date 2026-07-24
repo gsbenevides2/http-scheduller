@@ -13,11 +13,11 @@ jobs:
       contents: write
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@7
         with:
           persist-credentials: false
       - name: PR Agent Action Step
-        uses: the-pr-agent/pr-agent@v0.36.0
+        uses: the-pr-agent/pr-agent@v0.39.0
         id: pr_agent
         env:
           config.model: "openrouter/xiaomi/mimo-v2.5"
