@@ -85,7 +85,7 @@ export default function TelemetryPage() {
           <option value="">Todos os Schedulers</option>
           {schedulers.map((s) => (
             <option key={s.externalId} value={s.externalId}>
-              {s.url} ({s.method})
+              {s.name ? `${s.name} - ` : ""}{s.url} ({s.method})
             </option>
           ))}
         </select>
@@ -97,6 +97,7 @@ export default function TelemetryPage() {
           <thead>
             <tr>
               <th>Data/Hora</th>
+              <th>Nome</th>
               <th>Método</th>
               <th>URL</th>
               <th>Status</th>
@@ -108,21 +109,21 @@ export default function TelemetryPage() {
           <tbody>
             {isLoading ? (
               <tr>
-                <td colSpan={7} className="text-center">
+                <td colSpan={8} className="text-center">
                   Carregando...
                 </td>
               </tr>
             ) : null}
             {error ? (
               <tr>
-                <td colSpan={7} className="text-red-500 text-center">
+                <td colSpan={8} className="text-red-500 text-center">
                   {error}
                 </td>
               </tr>
             ) : null}
             {!isLoading && !error && paginatedRecords.length === 0 ? (
               <tr>
-                <td colSpan={7} className="text-gray-500 text-center">
+                <td colSpan={8} className="text-gray-500 text-center">
                   Nenhum registro de telemetria encontrado.
                 </td>
               </tr>
@@ -136,6 +137,7 @@ export default function TelemetryPage() {
                 <td className="text-sm">
                   {new Date(record.executedAt).toLocaleString("pt-BR")}
                 </td>
+                <td className="max-w-40 truncate">{record.requestName || "-"}</td>
                 <td>
                   <span className="badge badge-sm">{record.requestMethod}</span>
                 </td>
@@ -226,6 +228,12 @@ export default function TelemetryPage() {
                 <label className="font-semibold text-gray-400">Scheduler:</label>
                 <p className="text-gray-200 break-all">
                   {selectedRecord.schedulerExternalId || "(manual)"}
+                </p>
+              </div>
+              <div>
+                <label className="font-semibold text-gray-400">Nome:</label>
+                <p className="text-gray-200">
+                  {selectedRecord.requestName || "(sem nome)"}
                 </p>
               </div>
 

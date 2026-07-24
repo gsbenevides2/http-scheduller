@@ -100,6 +100,7 @@ export default function Home() {
         <table className="table">
           <thead>
             <tr>
+              <th>Nome</th>
               <th>External ID</th>
               <th>Trigger Type</th>
               <th>Trigger Value</th>
@@ -113,21 +114,21 @@ export default function Home() {
           <tbody>
             {isLoading ? (
               <tr>
-                <td colSpan={7} className="text-center">
+                <td colSpan={8} className="text-center">
                   Carregando...
                 </td>
               </tr>
             ) : null}
             {isError ? (
               <tr>
-                <td colSpan={7} className="text-red-500 text-center">
+                <td colSpan={8} className="text-red-500 text-center">
                   {error}
                 </td>
               </tr>
             ) : null}
             {isEmpty ? (
               <tr>
-                <td colSpan={7} className="text-gray-500 text-center">
+                <td colSpan={8} className="text-gray-500 text-center">
                   Nenhum agendamento encontrado.
                 </td>
               </tr>
@@ -138,6 +139,7 @@ export default function Home() {
                 className="hover:bg-zinc-800 cursor-pointer"
                 onClick={() => setSelectedScheduler(scheduller)}
               >
+                <td className="max-w-40 truncate">{scheduller.name || "-"}</td>
                 <td className="max-w-100 truncate">{scheduller.externalId}</td>
                 <td>{scheduller.triggerType}</td>
                 <td>

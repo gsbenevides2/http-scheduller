@@ -29,6 +29,7 @@ export class SchedulledRequests {
       .onConflictDoUpdate({
         target: schedulledRequests.externalId,
         set: buildConflictUpdateColumns(schedulledRequests, [
+          "name",
           "body",
           "excludeBeforeExecution",
           "headers",
@@ -106,6 +107,7 @@ export class SchedulledRequests {
 
       await TelemetryService.create({
         schedulerExternalId: schedulerExternalId ?? null,
+        requestName: payload.name ?? null,
         requestUrl: payload.url,
         requestMethod: payload.method,
         requestHeaders: payload.headers ?? null,
@@ -125,6 +127,7 @@ export class SchedulledRequests {
 
       await TelemetryService.create({
         schedulerExternalId: schedulerExternalId ?? null,
+        requestName: payload.name ?? null,
         requestUrl: payload.url,
         requestMethod: payload.method,
         requestHeaders: payload.headers ?? null,

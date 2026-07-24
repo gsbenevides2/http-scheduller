@@ -46,6 +46,7 @@ export default function SchedulerFormModal({
   const [externalId, setExternalId] = useState(
     initialValue?.externalId ?? crypto.randomUUID(),
   );
+  const [name, setName] = useState(initialValue?.name ?? "");
   const [localError, setLocalError] = useState<string | null>(null);
 
   // Remount-based form reset is handled by the parent via `key`.
@@ -105,6 +106,7 @@ export default function SchedulerFormModal({
 
     const payload: HttpSchedullerToAdd = {
       externalId: externalId.trim(),
+      name: name.trim() || null,
       triggerType,
       triggerValue,
       excludeBeforeExecution,
@@ -132,6 +134,16 @@ export default function SchedulerFormModal({
                 value={externalId}
                 onChange={(e) => setExternalId(e.target.value)}
                 disabled={disableExternalId}
+              />
+            </div>
+
+            <div>
+              <label className="font-semibold text-gray-400">Nome</label>
+              <input
+                className="w-full input input-bordered"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Ex: Health Check"
               />
             </div>
 

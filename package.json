@@ -3,7 +3,7 @@
   "displayName": "HTTP Scheduller",
   "description": "Sistema CRUD para agendar a execução de requisições HTTP",
   "type": "module",
-  "version": "1.0.16",
+  "version": "1.0.17",
   "private": false,
   "license": "MIT",
   "types": "./dist/server/index.d.ts",
