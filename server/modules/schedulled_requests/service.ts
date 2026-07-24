@@ -56,6 +56,7 @@ export class SchedulledRequests {
     payload: SchedulledRequestsModel["executeRequestBody"],
     schedulerExternalId?: string,
   ): Promise<SchedulledRequestsModel["executeRequestResponse"]> {
+    console.log(`[Executing Request]: ${payload.method} ${payload.url}`);
     const MAX_BODY_BYTES = 64 * 1024;
     const start = Date.now();
 
