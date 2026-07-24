@@ -17,13 +17,13 @@ export class CronnerService {
   static jobVersions = new Map<string, number>();
 
   static async upsertJob(job: CronnerJob) {
-    if (CronnerService.checkJobExists(job.id)) {
-      await CronnerService.removeJob(job.id);
-    }
-
     const currentVersion = CronnerService.jobVersions.get(job.id) ?? 0;
     const newVersion = currentVersion + 1;
     CronnerService.jobVersions.set(job.id, newVersion);
+
+    if (CronnerService.checkJobExists(job.id)) {
+      await CronnerService.removeJob(job.id);
+    }
 
     if (job.triggerType === "cron") {
       const version = newVersion;
