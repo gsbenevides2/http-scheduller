@@ -106,11 +106,11 @@ export class CronnerService {
 
     const executionPromise = (async () => {
       try {
+        await SchedulledRequests.executeRequest(scheduler, id);
         if (scheduler.excludeBeforeExecution) {
           await CronnerService.removeJob(id);
           await SchedulledRequests.deleteMany([id]);
         }
-        await SchedulledRequests.executeRequest(scheduler, id);
       } catch (err) {
         console.error(`[CronnerService] Error executing job ${id}:`, err);
       }

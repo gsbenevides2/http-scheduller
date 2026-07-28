@@ -11,6 +11,8 @@ function registerShutdownHandlers() {
   const shutdown = async (signal: string) => {
     console.log(`[instrumentation] Received ${signal}, shutting down gracefully...`);
     await CronnerService.gracefulShutdown();
+    const proc = globalThis.process;
+    proc?.exit?.(0);
   };
 
   const proc = globalThis.process;
