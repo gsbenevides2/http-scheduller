@@ -8,6 +8,37 @@ import { loginInAuthentik } from "@/server/modules/authentik";
 import { buildConflictUpdateColumns } from "@/server/utils/buildConflictUpdateColumns";
 import { validateUrl } from "@/server/utils/ssrfProtection";
 
+const MAX_REDIRECTS = 10;
+
+async function safeFetch(
+  url: string,
+  init: RequestInit,
+): Promise<Response> {
+  let currentUrl = url;
+  let redirects = 0;
+
+  while (true) {
+    await validateUrl(currentUrl);
+    const response = await fetch(currentUrl, { ...init, redirect: "manual" });
+
+    if (response.status >= 300 && response.status < 400) {
+      const location = response.headers.get("location");
+      if (!location) return response;
+
+      redirects++;
+      if (redirects > MAX_REDIRECTS) {
+        throw new Error(`Too many redirects (max ${MAX_REDIRECTS})`);
+      }
+
+      const resolved = new URL(location, currentUrl).toString();
+      currentUrl = resolved;
+      continue;
+    }
+
+    return response;
+  }
+}
+
 async function readBodyWithLimit(
   body: ReadableStream<Uint8Array> | null,
   maxBytes: number,
@@ -133,7 +164,7 @@ export class SchedulledRequests {
         init.body = payload.body;
       }
 
-      const response = await fetch(payload.url, init);
+      const response = await safeFetch(payload.url, init);
       const truncated = await readBodyWithLimit(response.body, MAX_BODY_BYTES);
 
       const result = {
