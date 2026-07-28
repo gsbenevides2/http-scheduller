@@ -1,5 +1,7 @@
 import { app } from "@/server";
 
+export const runtime = "nodejs";
+
 export const GET = app.fetch;
 export const POST = app.fetch;
 export const DELETE = app.fetch;

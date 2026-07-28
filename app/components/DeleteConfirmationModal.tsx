@@ -1,6 +1,7 @@
 interface DeleteConfirmationModalProps {
   isOpen: boolean;
   isDeleting: boolean;
+  errorMessage?: string | null;
   onConfirm: () => void;
   onCancel: () => void;
 }
@@ -8,6 +9,7 @@ interface DeleteConfirmationModalProps {
 export default function DeleteConfirmationModal({
   isOpen,
   isDeleting,
+  errorMessage,
   onConfirm,
   onCancel,
 }: DeleteConfirmationModalProps) {
@@ -18,9 +20,12 @@ export default function DeleteConfirmationModal({
       <div className="modal-box">
         <h3 className="font-bold text-lg">Confirmar Exclusão</h3>
         <p className="py-4">
-          Tem certeza que deseja excluir este agendamento? Esta ação não pode
+          Tem certeza que deseja excluir este item? Esta ação não pode
           ser desfeita.
         </p>
+        {errorMessage ? (
+          <div className="mb-4 text-red-400 text-sm">{errorMessage}</div>
+        ) : null}
         <div className="modal-action">
           <button className="btn" onClick={onCancel} disabled={isDeleting}>
             Cancelar

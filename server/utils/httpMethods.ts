@@ -1,1 +1,1 @@
-export const httpMethods = ["GET", "POST", "PUT", "DELETE", "PATCH"] as const;
+export { httpMethods } from "@/shared/httpMethods";

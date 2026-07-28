@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { formatTriggerValue } from "../utils/formatTriggerValue";
 import SchedulerFormModal from "./SchedulerFormModal";
 import {
@@ -32,17 +32,15 @@ export default function SchedulerDetailsModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  const details = useMemo(() => scheduler, [scheduler]);
+  if (!scheduler) return null;
 
-  if (!details) return null;
-
-  const handleTest = async () => {
+    const handleTest = async () => {
     setTesting(true);
     setTestError(null);
     setTestResult(null);
 
     try {
-      const res = await onTest(details);
+      const res = await onTest(scheduler);
       setTestResult(res);
       if (!res.ok) setTestError(res.error ?? "Falha no teste da request");
     } catch (e) {
@@ -66,56 +64,56 @@ export default function SchedulerDetailsModal({
           <div className="space-y-3">
             <div>
               <label className="font-semibold text-gray-400">Nome:</label>
-              <p className="text-gray-200">{details.name || "(sem nome)"}</p>
+              <p className="text-gray-200">{scheduler.name || "(sem nome)"}</p>
             </div>
             <div>
               <label className="font-semibold text-gray-400">
                 External ID:
               </label>
-              <p className="text-gray-200 break-all">{details.externalId}</p>
+              <p className="text-gray-200 break-all">{scheduler.externalId}</p>
             </div>
             <div>
               <label className="font-semibold text-gray-400">
                 Trigger Type:
               </label>
-              <p className="text-gray-200">{details.triggerType}</p>
+              <p className="text-gray-200">{scheduler.triggerType}</p>
             </div>
             <div>
               <label className="font-semibold text-gray-400">
                 Trigger Value:
               </label>
               <p className="text-gray-200">
-                {formatTriggerValue(details.triggerType, details.triggerValue)}
+                {formatTriggerValue(scheduler.triggerType, scheduler.triggerValue)}
               </p>
             </div>
             <div>
               <label className="font-semibold text-gray-400">Method:</label>
-              <p className="text-gray-200">{details.method}</p>
+              <p className="text-gray-200">{scheduler.method}</p>
             </div>
             <div>
               <label className="font-semibold text-gray-400">URL:</label>
-              <p className="text-gray-200 break-all">{details.url}</p>
+              <p className="text-gray-200 break-all">{scheduler.url}</p>
             </div>
             <div>
               <label className="font-semibold text-gray-400">
                 Excluir Antes da Execução:
               </label>
               <p className="text-gray-200">
-                {details.excludeBeforeExecution ? "Sim" : "Não"}
+                {scheduler.excludeBeforeExecution ? "Sim" : "Não"}
               </p>
             </div>
 
             <div>
               <label className="font-semibold text-gray-400">Headers:</label>
               <pre className="bg-zinc-800 mt-2 p-3 rounded overflow-x-auto text-gray-200">
-                {JSON.stringify(details.headers, null, 2)}
+                {JSON.stringify(scheduler.headers, null, 2)}
               </pre>
             </div>
 
             <div>
               <label className="font-semibold text-gray-400">Body:</label>
               <pre className="bg-zinc-800 mt-2 p-3 rounded overflow-x-auto text-gray-200">
-                {details.body || "(vazio)"}
+                {scheduler.body || "(vazio)"}
               </pre>
             </div>
 
@@ -175,9 +173,9 @@ export default function SchedulerDetailsModal({
       </dialog>
 
       <SchedulerFormModal
-        key={details.externalId}
+        key={scheduler.externalId}
         isOpen={editOpen}
-        initialValue={details}
+        initialValue={scheduler}
         disableExternalId={true}
         title="Editar Request"
         submitLabel="Salvar"

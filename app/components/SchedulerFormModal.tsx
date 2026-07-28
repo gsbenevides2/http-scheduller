@@ -3,7 +3,7 @@ import {
   HttpSchedullerMethods,
   HttpSchedullerToAdd,
 } from "../hooks/useSchedulersQuery";
-import { httpMethods } from "@/server/utils/httpMethods";
+import { httpMethods } from "@/shared/httpMethods";
 
 type SchedulerFormModalProps = {
   isOpen: boolean;

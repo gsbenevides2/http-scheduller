@@ -83,4 +83,21 @@ export const telemetryRoutes = new Elysia({
         [StatusMap["No Content"]]: z.undefined(),
       },
     },
+  )
+  .delete(
+    "/cleanup",
+    async ({ query }) => {
+      const days = Number(query.days) || 30;
+      const deleted = await TelemetryService.cleanOlderThan(days);
+      return { deleted };
+    },
+    {
+      query: z.object({
+        days: z.string().optional(),
+      }),
+      detail: {
+        summary: "Cleanup Old Telemetry",
+        description: "Delete telemetry records older than N days (default: 30).",
+      },
+    },
   );

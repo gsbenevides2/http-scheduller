@@ -4,9 +4,18 @@ export function formatTriggerValue(
 ): string {
   if (triggerType === "cron" && typeof triggerValue === "string") {
     return `Cron: ${triggerValue}`;
-  } else if (triggerType === "date" && triggerValue instanceof Date) {
-    return triggerValue.toLocaleString();
-  } else {
-    return "Valor de trigger inválido";
   }
+
+  if (triggerType === "date") {
+    const date =
+      triggerValue instanceof Date
+        ? triggerValue
+        : new Date(triggerValue);
+
+    if (!Number.isNaN(date.getTime())) {
+      return date.toLocaleString();
+    }
+  }
+
+  return "Valor de trigger inválido";
 }
