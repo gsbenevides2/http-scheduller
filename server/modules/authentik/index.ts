@@ -35,7 +35,9 @@ async function getAndValidFromCache(clientId: string): Promise<string | null> {
 }
 
 async function setCache(clientId: string, token: string): Promise<void> {
-  await CacheClient.set(`authentik-login:${clientId}`, token);
+  const exp = getExpirationFromJWT(token);
+  const ttl = exp ? Math.max(exp - Math.floor(Date.now() / 1000), 60) : 3600;
+  await CacheClient.set(`authentik-login:${clientId}`, token, ttl);
 }
 
 export async function loginInAuthentik(

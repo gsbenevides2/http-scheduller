@@ -9,12 +9,12 @@ interface CronnerJob {
 
 type JobHandle = CronJob | ReturnType<typeof setTimeout>;
 
-// Maximum safe setTimeout delay (signed 32-bit int max)
 const MAX_TIMEOUT_MS = 2_147_483_647;
 
 export class CronnerService {
   static jobs = new Map<string, JobHandle>();
   static jobVersions = new Map<string, number>();
+  static runningJobs = new Set<Promise<void>>();
 
   static async upsertJob(job: CronnerJob) {
     const currentVersion = CronnerService.jobVersions.get(job.id) ?? 0;
@@ -34,7 +34,6 @@ export class CronnerService {
       return;
     }
 
-    // triggerType === "date"
     const targetDate = new Date(job.triggerValue);
     if (Number.isNaN(targetDate.getTime())) {
       console.warn(
@@ -93,58 +92,72 @@ export class CronnerService {
   }
 
   static async processJob(id: string, version?: number) {
-    const isCurrentVersion =
-      version === undefined || CronnerService.jobVersions.get(id) === version;
-
-    if (!isCurrentVersion) {
+    const currentVersion = CronnerService.jobVersions.get(id);
+    if (version !== undefined && currentVersion !== version) {
       return;
     }
 
     const scheduler = await SchedulledRequests.getById(id);
     if (!scheduler) return;
 
-    if (
-      version !== undefined &&
-      CronnerService.jobVersions.get(id) !== version
-    ) {
+    if (version !== undefined && CronnerService.jobVersions.get(id) !== version) {
       return;
     }
 
-    if (scheduler.excludeBeforeExecution) {
-      await CronnerService.removeJob(id);
-      await SchedulledRequests.deleteMany([id]);
-    }
+    const executionPromise = (async () => {
+      try {
+        if (scheduler.excludeBeforeExecution) {
+          await CronnerService.removeJob(id);
+          await SchedulledRequests.deleteMany([id]);
+        }
+        await SchedulledRequests.executeRequest(scheduler, id);
+      } catch (err) {
+        console.error(`[CronnerService] Error executing job ${id}:`, err);
+      }
+    })();
 
-    await SchedulledRequests.executeRequest(scheduler, id);
+    CronnerService.runningJobs.add(executionPromise);
+    executionPromise.finally(() => {
+      CronnerService.runningJobs.delete(executionPromise);
+    });
   }
 
   static async gracefulShutdown() {
-    for (const [id, handle] of this.jobs) {
+    const handles = [...this.jobs.entries()];
+    this.jobs.clear();
+    this.jobVersions.clear();
+
+    for (const [, handle] of handles) {
       if (typeof (handle as CronJob).stop === "function") {
         (handle as CronJob).stop();
       } else {
         clearTimeout(handle as ReturnType<typeof setTimeout>);
       }
-      this.jobs.delete(id);
     }
-    this.jobVersions.clear();
+
+    if (CronnerService.runningJobs.size > 0) {
+      console.log(
+        `[CronnerService] Waiting for ${CronnerService.runningJobs.size} running jobs to complete...`,
+      );
+      await Promise.allSettled([...CronnerService.runningJobs]);
+    }
   }
 
   static async gracefulStart() {
     const schedullers = await SchedulledRequests.getAll();
-    for (const scheduler of schedullers) {
-      await CronnerService.upsertJob({
-        id: scheduler.externalId,
-        triggerType: scheduler.triggerType,
-        triggerValue: scheduler.triggerValue,
-      });
-    }
+    await Promise.all(
+      schedullers.map((scheduler) =>
+        CronnerService.upsertJob({
+          id: scheduler.externalId,
+          triggerType: scheduler.triggerType,
+          triggerValue: scheduler.triggerValue,
+        }),
+      ),
+    );
   }
 
   static async upsertManyJobs(jobs: CronnerJob[]) {
-    for (const job of jobs) {
-      await this.upsertJob(job);
-    }
+    await Promise.all(jobs.map((job) => this.upsertJob(job)));
   }
 
   static async removeManyJobs(ids: string[]) {

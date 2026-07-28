@@ -6,6 +6,47 @@ import { TelemetryService } from "@/server/modules/telemetry/service";
 import { ClientIdsService } from "@/server/modules/client_ids/service";
 import { loginInAuthentik } from "@/server/modules/authentik";
 import { buildConflictUpdateColumns } from "@/server/utils/buildConflictUpdateColumns";
+import { validateUrl } from "@/server/utils/ssrfProtection";
+
+async function readBodyWithLimit(
+  body: ReadableStream<Uint8Array> | null,
+  maxBytes: number,
+): Promise<string> {
+  if (!body) return "";
+  const reader = body.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  let truncated = false;
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    if (total + value.length > maxBytes) {
+      const remaining = maxBytes - total;
+      if (remaining > 0) chunks.push(value.slice(0, remaining));
+      truncated = true;
+      reader.cancel();
+      break;
+    }
+    chunks.push(value);
+    total += value.length;
+  }
+
+  const decoder = new TextDecoder();
+  const text = decoder.decode(new Uint8Array(chunks.reduce((a, c) => a + c.length, 0) > 0 ? concatChunks(chunks) : new Uint8Array(0)));
+  return truncated ? text + "\n…[truncated]" : text;
+}
+
+function concatChunks(chunks: Uint8Array[]): Uint8Array {
+  const total = chunks.reduce((a, c) => a + c.length, 0);
+  const result = new Uint8Array(total);
+  let offset = 0;
+  for (const chunk of chunks) {
+    result.set(chunk, offset);
+    offset += chunk.length;
+  }
+  return result;
+}
 
 export class SchedulledRequests {
   static async getAll(): Promise<
@@ -58,6 +99,7 @@ export class SchedulledRequests {
     schedulerExternalId?: string,
   ): Promise<SchedulledRequestsModel["executeRequestResponse"]> {
     console.log(`[Executing Request]: ${payload.method} ${payload.url}`);
+    await validateUrl(payload.url);
     const MAX_BODY_BYTES = 64 * 1024;
     const start = Date.now();
 
@@ -92,11 +134,7 @@ export class SchedulledRequests {
       }
 
       const response = await fetch(payload.url, init);
-      const raw = await response.text();
-      const truncated =
-        raw.length > MAX_BODY_BYTES
-          ? raw.slice(0, MAX_BODY_BYTES) + "\n…[truncated]"
-          : raw;
+      const truncated = await readBodyWithLimit(response.body, MAX_BODY_BYTES);
 
       const result = {
         ok: response.ok,

@@ -87,6 +87,16 @@ export class TelemetryService {
   static async clearAll(): Promise<void> {
     await db.delete(telemetry);
   }
+
+  static async cleanOlderThan(days: number): Promise<number> {
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - days);
+    const result = await db
+      .delete(telemetry)
+      .where(sql`${telemetry.executedAt} < ${cutoff}`)
+      .returning({ id: telemetry.id });
+    return result.length;
+  }
 }
 
 type OTelemetryInsert = typeof telemetry.$inferInsert;

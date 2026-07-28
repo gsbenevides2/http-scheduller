@@ -36,7 +36,7 @@ export default function Home() {
   const [isSaving, setIsSaving] = useState(false);
 
   const [saveError, setSaveError] = useState<string | null>(null);
-  const [, setDeleteError] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const handleDelete = async () => {
     if (!schedulerToDelete) return;
@@ -184,8 +184,12 @@ export default function Home() {
       <DeleteConfirmationModal
         isOpen={!!schedulerToDelete}
         isDeleting={isDeleting}
+        errorMessage={deleteError}
         onConfirm={handleDelete}
-        onCancel={() => setSchedulerToDelete(null)}
+        onCancel={() => {
+          setSchedulerToDelete(null);
+          setDeleteError(null);
+        }}
       />
 
       <SchedulerFormModal

@@ -8,6 +8,7 @@ import {
   useClientIdsQuery,
 } from "../hooks/useClientIdsQuery";
 import ClientIdFormModal from "../components/ClientIdFormModal";
+import DeleteConfirmationModal from "../components/DeleteConfirmationModal";
 
 export default function ClientIdsPage() {
   const {
@@ -23,15 +24,17 @@ export default function ClientIdsPage() {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [hostnameToDelete, setHostnameToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const handleDelete = async () => {
     if (!hostnameToDelete) return;
     setIsDeleting(true);
+    setDeleteError(null);
     try {
       await deleteClientId(hostnameToDelete);
       setHostnameToDelete(null);
     } catch {
-      console.error("Erro ao excluir client ID");
+      setDeleteError("Erro ao excluir client ID.");
     } finally {
       setIsDeleting(false);
     }
@@ -131,44 +134,16 @@ export default function ClientIdsPage() {
         </table>
       </div>
 
-      {/* Delete Confirmation Modal */}
-      {hostnameToDelete && (
-        <dialog className="modal modal-open">
-          <div className="max-w-sm modal-box">
-            <h3 className="mb-4 font-bold text-lg">Confirmar Exclusão</h3>
-            <p className="text-gray-400">
-              Tem certeza que deseja excluir o mapeamento para{" "}
-              <span className="font-mono text-gray-200">
-                {hostnameToDelete}
-              </span>
-              ?
-            </p>
-            <div className="modal-action">
-              <button
-                className="btn"
-                onClick={() => setHostnameToDelete(null)}
-                disabled={isDeleting}
-              >
-                Cancelar
-              </button>
-              <button
-                className="btn btn-error"
-                onClick={handleDelete}
-                disabled={isDeleting}
-              >
-                {isDeleting ? "Excluindo..." : "Excluir"}
-              </button>
-            </div>
-          </div>
-          <form
-            method="dialog"
-            className="modal-backdrop"
-            onClick={() => setHostnameToDelete(null)}
-          >
-            <button type="button">close</button>
-          </form>
-        </dialog>
-      )}
+      <DeleteConfirmationModal
+        isOpen={!!hostnameToDelete}
+        isDeleting={isDeleting}
+        errorMessage={deleteError}
+        onConfirm={handleDelete}
+        onCancel={() => {
+          setHostnameToDelete(null);
+          setDeleteError(null);
+        }}
+      />
 
       {/* Create Modal */}
       <ClientIdFormModal

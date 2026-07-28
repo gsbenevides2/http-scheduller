@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useTelemetryQuery, TelemetryRecord } from "../hooks/useTelemetryQuery";
 import { useSchedulersQuery } from "../hooks/useSchedulersQuery";
+import DeleteConfirmationModal from "../components/DeleteConfirmationModal";
 
 export default function TelemetryPage() {
   const [selectedScheduler, setSelectedScheduler] = useState<string>("");
@@ -18,14 +19,30 @@ export default function TelemetryPage() {
   const totalPages = Math.ceil(total / limit);
   const paginatedRecords = records;
 
-  const handleDelete = async (ids: number[]) => {
-    if (!confirm("Tem certeza que deseja excluir os registros selecionados?")) return;
-    await deleteRecords(ids);
+  const [deleteTarget, setDeleteTarget] = useState<number[] | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  const handleDelete = async () => {
+    if (deleteTarget === null) return;
+    setIsDeleting(true);
+    setDeleteError(null);
+    try {
+      if (deleteTarget.length === 0) {
+        await clearAll();
+      } else {
+        await deleteRecords(deleteTarget);
+      }
+      setDeleteTarget(null);
+    } catch {
+      setDeleteError("Erro ao excluir registros.");
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const handleClearAll = async () => {
-    if (!confirm("Tem certeza que deseja excluir TODOS os registros de telemetria?")) return;
-    await clearAll();
+    setDeleteTarget([]);
   };
 
   return (
@@ -168,7 +185,7 @@ export default function TelemetryPage() {
                     className="text-white btn btn-sm btn-error"
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleDelete([record.id]);
+                      setDeleteTarget([record.id]);
                     }}
                   >
                     Excluir
@@ -298,6 +315,17 @@ export default function TelemetryPage() {
           </form>
         </dialog>
       )}
+
+      <DeleteConfirmationModal
+        isOpen={deleteTarget !== null}
+        isDeleting={isDeleting}
+        errorMessage={deleteError}
+        onConfirm={handleDelete}
+        onCancel={() => {
+          setDeleteTarget(null);
+          setDeleteError(null);
+        }}
+      />
     </div>
   );
 }
